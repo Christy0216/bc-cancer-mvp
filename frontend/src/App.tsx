@@ -1,13 +1,12 @@
-import React from "react";
-import TestComponent from "./components/TestComponent";
+import React from 'react';
+import LoginPage from './components/LoginPage';
 
 const App: React.FC = () => {
-    return (
-        <div>
-            <h1>BC Cancer Donor Invitation System</h1>
-            <TestComponent />
-        </div>
-    );
+  return (
+    <div>
+      <LoginPage />
+    </div>
+  );
 };
 
 export default App;

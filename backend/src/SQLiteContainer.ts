@@ -5,7 +5,7 @@ import fs from 'fs';
 /**
  * Interfaces representing the structure of each table's data.
  */
-interface EventSchema {
+export interface EventSchema {
     event_id: number;
     name: string;
     location: string;

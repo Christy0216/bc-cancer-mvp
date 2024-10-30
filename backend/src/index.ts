@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import axios from "axios";
+import SQLiteContainer from "./SQLiteContainer";
 
 /** Interface **/
 
@@ -38,6 +39,8 @@ interface ErrorResponse {
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+const taskContainer = new SQLiteContainer('production');
 
 // Sample route
 app.get("/", (req: Request, res: Response) => {
@@ -98,7 +101,6 @@ app.get("/api/event", async (req: Request, res: Response<EventResponse | ErrorRe
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
 
 
 

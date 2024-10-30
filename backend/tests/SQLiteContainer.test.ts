@@ -2,7 +2,7 @@ import SQLiteContainer from '../src/SQLiteContainer';
 import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
-import { EventSchema, DonorSchema } from '../src/SQLiteContainer';
+import { EventSchema, DonorSchema, TaskSchema } from '../src/SQLiteContainer';
 
 const testDirectory = path.join(__dirname, '..');
 let mockDb: jest.Mocked<Database.Database>;
@@ -177,4 +177,59 @@ describe('Donor Management Tests', () => {
         expect(code).toBe(500);
         expect(message).toBe('An error occurred: Database error');
     });
+});
+
+describe('Task Creation Tests', () => {
+    test('should create tasks for each donor related to a specific event', () => {
+        // Initialize the SQLite container
+        const dbName = 'test_db_task_creation';
+        const taskManager = new SQLiteContainer(dbName);
+    
+        // Define and add a sample event
+        const event = {
+            name: 'Annual Fundraiser',
+            location: 'Chicago',
+            date: '2024-11-25',
+            description: 'A fundraiser event for charity.'
+        };
+        const [eventCode, eventMessage] = taskManager.addEvent(event);
+        const eventId = parseInt(eventMessage.split('ID: ')[1]);
+    
+        expect(eventCode).toBe(200);
+        expect(eventId).toBeDefined();
+    
+        // Define and add sample donors
+        const donors: DonorSchema[] = [
+            { donor_id: 0, first_name: 'John', nick_name: '', last_name: 'Doe', pmm: 'PMM1', organization_name: 'Org1', city: 'Chicago', total_donations: 100 },
+            { donor_id: 0, first_name: 'Jane', nick_name: '', last_name: 'Smith', pmm: 'PMM2', organization_name: 'Org2', city: 'New York', total_donations: 150 }
+        ];
+        const [donorCode, donorMessage] = taskManager.addDonors(donors);
+    
+        expect(donorCode).toBe(200);
+    
+        // Retrieve the donor IDs from the database to use in task creation
+        const db = new Database(path.join(testDirectory, `${dbName}.db`));
+        const donorRecords = db.prepare('SELECT donor_id FROM donors').all() as { donor_id: number }[];
+        const donorIds = donorRecords.map(record => record.donor_id);
+    
+        expect(donorIds.length).toBe(donors.length);
+    
+        // Call createTasksForEvent with the eventId and donorIds
+        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId, donorIds);
+        expect(taskCode).toBe(200);
+        expect(taskMessage).toBe(`Tasks created for event ID: ${eventId}`);
+    
+        // Verify tasks in the database
+        const tasks = db.prepare('SELECT * FROM tasks WHERE event_id = ?').all(eventId) as TaskSchema[];
+    
+        expect(tasks.length).toBe(donorIds.length);
+        tasks.forEach((task: TaskSchema, index) => {
+            expect(task.event_id).toBe(eventId);
+            expect(task.donor_id).toBe(donorIds[index]);
+            expect(task.status).toBe('pending');
+        });
+    
+        db.close(); // Close the database connection
+    });
+    
 });

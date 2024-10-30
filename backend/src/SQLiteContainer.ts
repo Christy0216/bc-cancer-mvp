@@ -25,7 +25,7 @@ export interface DonorSchema {
     // other donor fields...
 }
 
-interface TaskSchema {
+export interface TaskSchema {
     task_id: number;
     event_id: number;
     donor_id: number;
@@ -158,29 +158,29 @@ class SQLiteContainer {
         }
     }
 
-    // /**
-    //  * Creates tasks for each donor related to a specific event.
-    //  * @param eventId - The ID of the event.
-    //  * @param donorIds - Array of donor IDs to create tasks for.
-    //  * @returns A tuple containing the status code and a message.
-    //  */
-    // public createTasksForEvent(eventId: number, donorIds: number[]): [number, string] {
-    //     const sqlQuery = `
-    //         INSERT INTO tasks (event_id, donor_id, status)
-    //         VALUES (?, ?, 'pending')
-    //     `;
-    //     try {
-    //         const insertTask = this.db.prepare(sqlQuery);
-    //         const transaction = this.db.transaction((donors: number[]) => {
-    //             donors.forEach(donorId => insertTask.run(eventId, donorId));
-    //         });
-    //         transaction(donorIds);
-    //         return [200, `Tasks created for event ID: ${eventId}`];
-    //     } catch (error) {
-    //         console.error('Error creating tasks:', (error as Error).message);
-    //         return [500, `An error occurred: ${(error as Error).message}`];
-    //     }
-    // }
+    /**
+     * Creates tasks for each donor related to a specific event.
+     * @param eventId - The ID of the event.
+     * @param donorIds - Array of donor IDs to create tasks for.
+     * @returns A tuple containing the status code and a message.
+     */
+    public createTasksForEvent(eventId: number, donorIds: number[]): [number, string] {
+        const sqlQuery = `
+            INSERT INTO tasks (event_id, donor_id, status)
+            VALUES (?, ?, 'pending')
+        `;
+        try {
+            const insertTask = this.db.prepare(sqlQuery);
+            const transaction = this.db.transaction((donors: number[]) => {
+                donors.forEach(donorId => insertTask.run(eventId, donorId));
+            });
+            transaction(donorIds);
+            return [200, `Tasks created for event ID: ${eventId}`];
+        } catch (error) {
+            console.error('Error creating tasks:', (error as Error).message);
+            return [500, `An error occurred: ${(error as Error).message}`];
+        }
+    }
 
     // /**
     //  * Updates a task status to approved or rejected, with a reason if rejected.

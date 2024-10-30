@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import axios from "axios";
+import { ApiDonorsResponse } from "./types/ApiDonorsResponse";
 
 const app = express();
 app.use(cors());
@@ -17,7 +18,7 @@ app.get("/api/donors", async (req: Request, res: Response) => {
     const limit = req.query.limit || 1;
     const apiUrl = `https://bc-cancer-faux.onrender.com/donors?limit=${limit}&format=json`;
 
-    const response = await axios.get(apiUrl);
+    const response = await axios.get<ApiDonorsResponse>(apiUrl);
     res.json(response.data);
   } catch (error) {
     console.error("Error fetching donor data:", error);

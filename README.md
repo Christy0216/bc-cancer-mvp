@@ -25,6 +25,11 @@ Before you begin, ensure you have `npm` installed on your computer. You can chec
    ```
    Ensure the backend server is running before starting the frontend.
 
+3. **Testing the Development Server**
+   ```bash
+   npm run test
+   ```
+
 ## Setup and Running the Frontend
 
 1. **Install Dependencies**:

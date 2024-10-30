@@ -2,7 +2,7 @@ import SQLiteContainer from '../src/SQLiteContainer';
 import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
-import { EventSchema } from '../src/SQLiteContainer';
+import { EventSchema, DonorSchema } from '../src/SQLiteContainer';
 
 const testDirectory = path.join(__dirname, '..');
 let mockDb: jest.Mocked<Database.Database>;
@@ -86,6 +86,94 @@ describe('Event Management Tests', () => {
         });
 
         const [code, message] = eventManager.addEvent(event);
+        expect(code).toBe(500);
+        expect(message).toBe('An error occurred: Database error');
+    });
+});
+
+describe('Donor Management Tests', () => {
+    test('should add donors successfully and verify them in the database', () => {
+        // Initialize the SQLite container and ensure tables are created
+        const donorManager = new SQLiteContainer('test_db_donor_verification');
+
+        const donors: DonorSchema[] = [
+            {
+                donor_id: 0, // This field will be auto-incremented by the database
+                first_name: 'Carlos',
+                nick_name: 'Charlie',
+                last_name: 'Smith',
+                pmm: 'PMM123',
+                organization_name: 'Helping Hands Inc.',
+                city: 'Los Angeles',
+                total_donations: 5000,
+            },
+            {
+                donor_id: 0, // This field will be auto-incremented by the database
+                first_name: 'Maria',
+                nick_name: 'Mia',
+                last_name: 'Johnson',
+                pmm: 'PMM456',
+                organization_name: 'Bright Future Foundation',
+                city: 'San Francisco',
+                total_donations: 7500,
+            }
+        ];
+
+        // Add donors
+        const [code, message] = donorManager.addDonors(donors);
+        expect(code).toBe(200);
+        expect(message).toBe('Donors added successfully.');
+
+        // Verify the donors exist in the database
+        const db = new Database(path.join(testDirectory, 'test_db_donor_verification.db'));
+
+        // Check if the donors table was created
+        const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='donors';").get();
+        expect(tables).toBeDefined();
+
+        const stmt = db.prepare('SELECT * FROM donors');
+        const addedDonors = stmt.all() as DonorSchema[];
+
+        // Check that the number of donors matches
+        expect(addedDonors.length).toBe(donors.length);
+
+        // Check that each donor's details match
+        for (let i = 0; i < donors.length; i++) {
+            expect(addedDonors[i].first_name).toBe(donors[i].first_name);
+            expect(addedDonors[i].nick_name).toBe(donors[i].nick_name);
+            expect(addedDonors[i].last_name).toBe(donors[i].last_name);
+            expect(addedDonors[i].pmm).toBe(donors[i].pmm);
+            expect(addedDonors[i].organization_name).toBe(donors[i].organization_name);
+            expect(addedDonors[i].city).toBe(donors[i].city);
+            expect(addedDonors[i].total_donations).toBe(donors[i].total_donations);
+        }
+
+        db.close(); // Close the database connection
+    });
+
+    test('should return 500 error when database fails during addDonors', () => {
+        const donorManager = new SQLiteContainer('test_db_donor_failure');
+
+        const donors: DonorSchema[] = [
+            {
+                donor_id: 0,
+                first_name: 'John',
+                nick_name: 'Johnny',
+                last_name: 'Doe',
+                pmm: 'PMM789',
+                organization_name: 'Care for All',
+                city: 'New York',
+                total_donations: 10000,
+            }
+        ];
+
+        // Mock the database instance to throw an error
+        mockDb = donorManager['db'] as jest.Mocked<Database.Database>;
+        mockDb.prepare = jest.fn().mockImplementation(() => {
+            throw new Error('Database error');
+        });
+
+        const [code, message] = donorManager.addDonors(donors);
         expect(code).toBe(500);
         expect(message).toBe('An error occurred: Database error');
     });

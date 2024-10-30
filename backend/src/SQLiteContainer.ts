@@ -13,13 +13,15 @@ export interface EventSchema {
     description: string;
 }
 
-interface DonorSchema {
+export interface DonorSchema {
     donor_id: number;
     first_name: string;
+    nick_name: string;
     last_name: string;
+    pmm: string; // The Project Manager responsible for this donor
+    organization_name: string;
     city: string;
     total_donations: number;
-    pmm: string; // The Project Manager responsible for this donor
     // other donor fields...
 }
 
@@ -49,7 +51,7 @@ class SQLiteContainer {
 
         if (!fs.existsSync(this.dbFilename)) {
             console.log('Database file does not exist. Creating a new one.');
-            fs.writeFileSync(this.dbFilename, ''); 
+            fs.writeFileSync(this.dbFilename, '');
         }
 
         this.db = new Database(this.dbFilename);
@@ -72,21 +74,22 @@ class SQLiteContainer {
             );
         `);
         console.log('Events table created or already exist.');
-        
+
         // Create donors table
         this.db.exec(`
             CREATE TABLE IF NOT EXISTS donors (
                 donor_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 first_name TEXT,
+                nick_name TEXT,
                 last_name TEXT,
+                pmm TEXT NOT NULL,
+                organization_name TEXT,
                 city TEXT,
-                total_donations INTEGER,
-                pmm TEXT NOT NULL
-                -- other fields as needed
+                total_donations INTEGER
             );
         `);
         console.log('Donors table created or already exist.');
-        
+
         // Create tasks table
         this.db.exec(`
             CREATE TABLE IF NOT EXISTS tasks (
@@ -122,27 +125,38 @@ class SQLiteContainer {
         }
     }
 
-    // /**
-    //  * Adds a list of donors to the database.
-    //  * @param donors - An array of donor objects.
-    //  */
-    // public addDonors(donors: DonorSchema[]): [number, string] {
-    //     const sqlQuery = `
-    //         INSERT INTO donors (first_name, last_name, city, total_donations, pmm)
-    //         VALUES (?, ?, ?, ?, ?)
-    //     `;
-    //     try {
-    //         const insertDonor = this.db.prepare(sqlQuery);
-    //         const transaction = this.db.transaction((donorList: DonorSchema[]) => {
-    //             donorList.forEach(donor => insertDonor.run(donor.first_name, donor.last_name, donor.city, donor.total_donations, donor.pmm));
-    //         });
-    //         transaction(donors);
-    //         return [200, `Donors added successfully.`];
-    //     } catch (error) {
-    //         console.error('Error adding donors:', (error as Error).message);
-    //         return [500, `An error occurred: ${(error as Error).message}`];
-    //     }
-    // }
+    /**
+     * Adds a list of donors to the database.
+     * @param donors - An array of donor objects.
+     * @returns A tuple containing the status code and a message.
+     */
+    public addDonors(donors: DonorSchema[]): [number, string] {
+        const sqlQuery = `
+        INSERT INTO donors (first_name, nick_name, last_name, pmm, organization_name, city, total_donations)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+        try {
+            const insertDonor = this.db.prepare(sqlQuery);
+            const transaction = this.db.transaction((donorList: DonorSchema[]) => {
+                donorList.forEach(donor => {
+                    insertDonor.run(
+                        donor.first_name,
+                        donor.nick_name,
+                        donor.last_name,
+                        donor.pmm,
+                        donor.organization_name,
+                        donor.city,
+                        donor.total_donations
+                    );
+                });
+            });
+            transaction(donors);
+            return [200, `Donors added successfully.`];
+        } catch (error) {
+            console.error('Error adding donors:', (error as Error).message);
+            return [500, `An error occurred: ${(error as Error).message}`];
+        }
+    }
 
     // /**
     //  * Creates tasks for each donor related to a specific event.

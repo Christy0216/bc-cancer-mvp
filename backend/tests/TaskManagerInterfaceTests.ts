@@ -1,5 +1,5 @@
 // TaskManagerInterfaceTests.ts
-import { TaskContainerInterface, EventSchema, DonorSchema, TaskSchema } from '../src/dbTypes';
+import { TaskContainerInterface, EventSchema, DonorSchema, TaskSchema } from '../src/Types';
 
 export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterface) => {
     describe('Task Manager Interface Tests', () => {

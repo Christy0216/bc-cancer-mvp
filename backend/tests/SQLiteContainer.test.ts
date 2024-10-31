@@ -4,7 +4,7 @@ import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
 import { runTaskManagerTests } from './TaskManagerInterfaceTests';
-import { EventSchema, DonorSchema, TaskSchema } from '../src/dbTypes';
+import { EventSchema, DonorSchema, TaskSchema } from '../src/Types';
 
 const testDirectory = path.join(__dirname, '..');
 

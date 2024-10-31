@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
-import { EventSchema, DonorSchema, TaskSchema, DatabaseResponse, TaskContainerInterface } from './dbTypes';
+import { EventSchema, DonorSchema, TaskSchema, DatabaseResponse, TaskContainerInterface } from './Types';
 
 /**
  * Class representing a SQLite container for managing events, donors, and tasks.

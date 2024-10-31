@@ -52,7 +52,7 @@ app.get("/api/cities", async (req: Request, res: Response<CitiesResponse | Error
   }
 });
 
-// Route to create event based on selected cities and limit
+// Route to generate matched donor list based on selected cities and limit
 app.get("/api/event", async (req: Request, res: Response<EventResponse | ErrorResponse>): Promise<void> => {
   try {
     const cities = req.query.cities;

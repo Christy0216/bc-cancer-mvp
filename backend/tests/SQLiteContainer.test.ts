@@ -2,7 +2,7 @@ import SQLiteContainer from '../src/SQLiteContainer';
 import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
-import { EventSchema, DonorSchema, TaskSchema } from '../src/SQLiteContainer';
+import { EventSchema, DonorSchema, TaskSchema, TaskContainerInterface } from '../src/dbTypes';
 
 const testDirectory = path.join(__dirname, '..');
 let mockDb: jest.Mocked<Database.Database>;
@@ -96,9 +96,8 @@ describe('Donor Management Tests', () => {
         // Initialize the SQLite container and ensure tables are created
         const donorManager = new SQLiteContainer('test_db_donor_verification');
 
-        const donors: DonorSchema[] = [
+        const donors: Omit<DonorSchema, 'donor_id'>[] = [
             {
-                donor_id: 0, // This field will be auto-incremented by the database
                 first_name: 'Carlos',
                 nick_name: 'Charlie',
                 last_name: 'Smith',
@@ -108,7 +107,6 @@ describe('Donor Management Tests', () => {
                 total_donations: 5000,
             },
             {
-                donor_id: 0, // This field will be auto-incremented by the database
                 first_name: 'Maria',
                 nick_name: 'Mia',
                 last_name: 'Johnson',
@@ -154,9 +152,8 @@ describe('Donor Management Tests', () => {
     test('should return 500 error when database fails during addDonors', () => {
         const donorManager = new SQLiteContainer('test_db_donor_failure');
 
-        const donors: DonorSchema[] = [
+        const donors: Omit<DonorSchema, 'donor_id'>[] = [
             {
-                donor_id: 0,
                 first_name: 'John',
                 nick_name: 'Johnny',
                 last_name: 'Doe',
@@ -199,9 +196,9 @@ describe('Task Creation Tests', () => {
         expect(eventId).toBeDefined();
     
         // Define and add sample donors
-        const donors: DonorSchema[] = [
-            { donor_id: 0, first_name: 'John', nick_name: '', last_name: 'Doe', pmm: 'PMM1', organization_name: 'Org1', city: 'Chicago', total_donations: 100 },
-            { donor_id: 0, first_name: 'Jane', nick_name: '', last_name: 'Smith', pmm: 'PMM2', organization_name: 'Org2', city: 'New York', total_donations: 150 }
+        const donors: Omit<DonorSchema, 'donor_id'>[] = [
+            {first_name: 'John', nick_name: '', last_name: 'Doe', pmm: 'PMM1', organization_name: 'Org1', city: 'Chicago', total_donations: 100 },
+            {first_name: 'Jane', nick_name: '', last_name: 'Smith', pmm: 'PMM2', organization_name: 'Org2', city: 'New York', total_donations: 150 }
         ];
         const [donorCode, donorMessage] = taskManager.addDonors(donors);
     
@@ -335,5 +332,71 @@ describe('Task Status Update Tests', () => {
         expect(updatedTask.reason).toBe(rejectionReason);
 
         db.close(); // Close the database connection
+    });
+});
+
+
+describe('Task Retrieval by PMM Tests', () => {
+    test('should retrieve tasks only for donors assigned to a specific PMM', () => {
+        // Initialize SQLite container
+        const dbName = 'test_db_task_by_pmm';
+        const taskManager = new SQLiteContainer(dbName);
+
+        // Add a sample event
+        const event = {
+            name: 'Spring Fundraiser',
+            location: 'Denver',
+            date: '2024-03-20',
+            description: 'A spring fundraising event for charity.'
+        };
+        const [eventCode, eventMessage] = taskManager.addEvent(event);
+        const eventId = parseInt(eventMessage.split('ID: ')[1]);
+
+        expect(eventCode).toBe(200);
+
+        // Define and add sample donors with different PMMs
+        const donors: DonorSchema[] = [
+            { donor_id: 0, first_name: 'Alice', nick_name: '', last_name: 'Johnson', pmm: 'PMM100', organization_name: 'CharityOrg A', city: 'Denver', total_donations: 500 },
+            { donor_id: 0, first_name: 'Bob', nick_name: '', last_name: 'Smith', pmm: 'PMM100', organization_name: 'CharityOrg B', city: 'Denver', total_donations: 300 },
+            { donor_id: 0, first_name: 'Charlie', nick_name: '', last_name: 'Brown', pmm: 'PMM200', organization_name: 'CharityOrg C', city: 'Denver', total_donations: 400 }
+        ];
+        const [donorCode, donorMessage] = taskManager.addDonors(donors);
+        expect(donorCode).toBe(200);
+
+        // Retrieve donor IDs for task creation
+        const db = new Database(path.join(testDirectory, `${dbName}.db`));
+        const donorRecords = db.prepare('SELECT donor_id, pmm FROM donors').all() as { donor_id: number; pmm: string }[];
+        const donorIdsForPMM100 = donorRecords.filter(record => record.pmm === 'PMM100').map(record => record.donor_id);
+
+        // Create tasks for each donor related to the event
+        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId, donorIdsForPMM100);
+        expect(taskCode).toBe(200);
+        expect(taskMessage).toBe(`Tasks created for event ID: ${eventId}`);
+
+        // Fetch tasks for PMM100 and verify they only include tasks for PMM100 donors
+        const [fetchCode, tasks] = taskManager.getTasksByPMM('PMM100');
+        expect(fetchCode).toBe(200);
+        expect(Array.isArray(tasks)).toBe(true);
+        const tasksArray = tasks as TaskSchema[];
+
+        // Verify each task is related to PMM100's donors
+        expect(tasksArray.length).toBe(donorIdsForPMM100.length);
+        tasksArray.forEach(task => {
+            expect(donorIdsForPMM100).toContain(task.donor_id);
+            expect(task.event_id).toBe(eventId);
+            expect(task.status).toBe('pending');
+        });
+
+        db.close(); // Close the database connection
+    });
+
+    test('should return an empty list if PMM has no assigned donors', () => {
+        const dbName = 'test_db_task_no_pmm_donors';
+        const taskManager = new SQLiteContainer(dbName);
+
+        // Try to fetch tasks for a non-existent PMM
+        const [fetchCode, tasks] = taskManager.getTasksByPMM('PMM999');
+        expect(fetchCode).toBe(200);
+        expect(tasks).toEqual([]); // Expect an empty array since no tasks should match this PMM
     });
 });

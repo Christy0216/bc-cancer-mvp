@@ -1,42 +1,12 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
-
-/**
- * Interfaces representing the structure of each table's data.
- */
-export interface EventSchema {
-    event_id: number;
-    name: string;
-    location: string;
-    date: string;
-    description: string;
-}
-
-export interface DonorSchema {
-    donor_id: number;
-    first_name: string;
-    nick_name: string;
-    last_name: string;
-    pmm: string; // The Project Manager responsible for this donor
-    organization_name: string;
-    city: string;
-    total_donations: number;
-    // other donor fields...
-}
-
-export interface TaskSchema {
-    task_id: number;
-    event_id: number;
-    donor_id: number;
-    status: string;
-    reason: string | null;
-}
+import { EventSchema, DonorSchema, TaskSchema, DatabaseResponse, TaskContainerInterface } from './dbTypes';
 
 /**
  * Class representing a SQLite container for managing events, donors, and tasks.
  */
-class SQLiteContainer {
+class SQLiteContainer implements TaskContainerInterface {
     private db: Database.Database; // The SQLite database instance
     private dbFilename: string; // The filename of the SQLite database
 
@@ -110,7 +80,7 @@ class SQLiteContainer {
      * @param event - The event object containing event details.
      * @returns A tuple containing the status code and a message.
      */
-    public addEvent(event: { name: string, location: string, date: string, description: string }): [number, string] {
+    public addEvent(event: Omit<EventSchema, 'event_id'>): DatabaseResponse<string> {
         const sqlQuery = `
             INSERT INTO events (name, location, date, description)
             VALUES (?, ?, ?, ?)
@@ -130,14 +100,14 @@ class SQLiteContainer {
      * @param donors - An array of donor objects.
      * @returns A tuple containing the status code and a message.
      */
-    public addDonors(donors: DonorSchema[]): [number, string] {
+    public addDonors(donors: Omit<DonorSchema, 'donor_id'>[]): [number, string] {
         const sqlQuery = `
         INSERT INTO donors (first_name, nick_name, last_name, pmm, organization_name, city, total_donations)
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
         try {
             const insertDonor = this.db.prepare(sqlQuery);
-            const transaction = this.db.transaction((donorList: DonorSchema[]) => {
+            const transaction = this.db.transaction((donorList: Omit<DonorSchema, 'donor_id'>[]) => {
                 donorList.forEach(donor => {
                     insertDonor.run(
                         donor.first_name,
@@ -203,24 +173,24 @@ class SQLiteContainer {
         }
     }
 
-    // /**
-    //  * Fetches all tasks for a specific PMM, allowing them to view tasks only for their assigned donors.
-    //  * @param pmm - The PMM responsible for the donors.
-    //  */
-    // public getTasksByPMM(pmm: string): [number, TaskSchema[] | string] {
-    //     const sqlQuery = `
-    //         SELECT t.* FROM tasks t
-    //         JOIN donors d ON t.donor_id = d.donor_id
-    //         WHERE d.pmm = ?
-    //     `;
-    //     try {
-    //         const rows = this.db.prepare(sqlQuery).all(pmm) as TaskSchema[];
-    //         return [200, rows];
-    //     } catch (error) {
-    //         console.error('Error fetching tasks for PMM:', (error as Error).message);
-    //         return [500, `An error occurred: ${(error as Error).message}`];
-    //     }
-    // }
+    /**
+     * Fetches all tasks for a specific PMM, allowing them to view tasks only for their assigned donors.
+     * @param pmm - The PMM responsible for the donors.
+     */
+    public getTasksByPMM(pmm: string): DatabaseResponse<TaskSchema[]> {
+        const sqlQuery = `
+            SELECT t.* FROM tasks t
+            JOIN donors d ON t.donor_id = d.donor_id
+            WHERE d.pmm = ?
+        `;
+        try {
+            const rows = this.db.prepare(sqlQuery).all(pmm) as TaskSchema[];
+            return [200, rows];
+        } catch (error) {
+            console.error('Error fetching tasks for PMM:', (error as Error).message);
+            return [500, `An error occurred: ${(error as Error).message}`];
+        }
+    }
 }
 
 export default SQLiteContainer;

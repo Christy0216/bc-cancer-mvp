@@ -76,6 +76,23 @@ class SQLiteContainer implements TaskContainerInterface {
     }
 
     /**
+     * Fetches all events from the database.
+     * @returns A tuple containing the status code and an array of EventSchema objects.
+     */
+    public getEvents(): DatabaseResponse<EventSchema[]> {
+        const sqlQuery = `
+        SELECT * FROM events
+    `;
+        try {
+            const rows = this.db.prepare(sqlQuery).all() as EventSchema[];
+            return [200, rows];
+        } catch (error) {
+            console.error('Error fetching events:', (error as Error).message);
+            return [500, `An error occurred: ${(error as Error).message}`];
+        }
+    }
+
+    /**
      * Adds a new event to the database.
      * @param event - The event object containing event details.
      * @returns A tuple containing the status code and a message.

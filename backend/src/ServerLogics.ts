@@ -53,7 +53,7 @@ app.get("/api/cities", async (req: Request, res: Response<CitiesResponse | Error
 });
 
 // Route to generate matched donor list based on selected cities and limit
-app.get("/api/event", async (req: Request, res: Response<EventResponse | ErrorResponse>): Promise<void> => {
+app.get("/api/search-donors", async (req: Request, res: Response<EventResponse | ErrorResponse>): Promise<void> => {
   try {
     const cities = req.query.cities;
     const limit = req.query.limit || 1;
@@ -81,6 +81,24 @@ app.get("/api/event", async (req: Request, res: Response<EventResponse | ErrorRe
   } catch (error) {
     console.error("Error fetching events:", error);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Route to fetch all events
+app.get("/api/events", (req: Request, res: Response) => {
+  const [statusCode, result] = taskContainer.getEvents();
+  res.status(statusCode).json(result);
+});
+
+// Route to create an event
+app.post("/api/event", async (req: Request, res: Response) => {
+  const { name, location, date, description } = req.body;
+  const eventResult = taskContainer.addEvent({ name, location, date, description });
+  
+  if (eventResult[0] === 200) {
+    res.status(200).json({ message: eventResult[1] });
+  } else {
+    res.status(500).json({ message: "Failed to create event in the database." });
   }
 });
 

@@ -2,37 +2,9 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import axios from "axios";
 import SQLiteContainer from "./SQLiteContainer";
+import { DonorsResponse, City, CitiesResponse, EventResponse, ErrorResponse } from "./Types";
 
-/** Interface **/
-
-interface DonorsResponse {
-  headers: string[];
-  data: (string | number)[][];
-}
-
-// City interface to represent each city object
-interface City {
-  id: number;
-  name: string;
-}
-
-// CitiesResponse interface to represent the entire response object
-interface CitiesResponse {
-  data: City[];
-}
-
-// Define the interface for the API response
-interface EventResponse {
-  headers: string[];
-  data: (string | number)[][];
-}
-
-// ErrorResponse interface to represent the error response
-interface ErrorResponse {
-  message: string;
-}
-
-
+const PORT = 5001;
 
 /** Server **/
 
@@ -105,7 +77,7 @@ app.get("/api/event", async (req: Request, res: Response<EventResponse | ErrorRe
 
 
 
-const PORT = 5001;
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

@@ -54,13 +54,24 @@ app.get("/api/cities", async (req: Request, res: Response<CitiesResponse | Error
 });
 
 // Route to create event based on selected cities and limit
-app.get("/api/event", async (req: Request, res: Response<EventResponse | ErrorResponse>) => {
+app.get("/api/event", async (req: Request, res: Response<EventResponse | ErrorResponse>): Promise<void> => {
   try {
-    const cities = req.query.cities as string[]; // Cities array from query
-    const limit = req.query.limit || 1; // Limit from query, default is 1 if not provided
+    const cities = req.query.cities;
+    const limit = req.query.limit || 1;
 
-    // Encode the cities as query parameters
-    const queryParams = cities.map(city => `cities=${encodeURIComponent(city)}`).join('&');
+    // Ensure at least one city is provided
+    if (!cities || (Array.isArray(cities) && cities.length === 0)) {
+      res.status(400).json({ message: "At least one city must be provided." });
+      return;
+    }
+
+    // Handle cities array or single city case
+    const cityArray = Array.isArray(cities) ? cities : [cities as string];
+    const queryParams = cityArray
+      .map(city => `cities=${encodeURIComponent(city as string)}`)
+      .join('&');
+
+    // Build the API URL
     const apiUrl = `https://bc-cancer-faux.onrender.com/event?${queryParams}&limit=${limit}&format=json`;
 
     // Fetch event data from the external API
@@ -73,9 +84,6 @@ app.get("/api/event", async (req: Request, res: Response<EventResponse | ErrorRe
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
-
-
 
 
 app.listen(PORT, () => {

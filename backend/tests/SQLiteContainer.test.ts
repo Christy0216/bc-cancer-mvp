@@ -400,3 +400,71 @@ describe('Task Retrieval by PMM Tests', () => {
         expect(tasks).toEqual([]); // Expect an empty array since no tasks should match this PMM
     });
 });
+
+
+describe('Task Retrieval by Event Tests', () => {
+    test('should retrieve tasks only for a specific event', () => {
+        // Initialize SQLite container
+        const dbName = 'test_db_task_by_event';
+        const taskManager = new SQLiteContainer(dbName);
+
+        // Define and add a sample event
+        const event = {
+            name: 'Autumn Charity',
+            location: 'San Francisco',
+            date: '2024-09-15',
+            description: 'A charity event for autumn.'
+        };
+        const [eventCode, eventMessage] = taskManager.addEvent(event);
+        const eventId = parseInt(eventMessage.split('ID: ')[1]);
+
+        expect(eventCode).toBe(200);
+
+        // Define and add sample donors
+        const donors: Omit<DonorSchema, 'donor_id'>[] = [
+            { first_name: 'Daisy', nick_name: '', last_name: 'Miller', pmm: 'PMM300', organization_name: 'Helping Hands', city: 'San Francisco', total_donations: 200 },
+            { first_name: 'Jack', nick_name: '', last_name: 'Johnson', pmm: 'PMM300', organization_name: 'Care Foundation', city: 'San Francisco', total_donations: 350 }
+        ];
+        const [donorCode, donorMessage] = taskManager.addDonors(donors);
+        expect(donorCode).toBe(200);
+
+        // Retrieve donor IDs from the database to use in task creation
+        const db = new Database(path.join(testDirectory, `${dbName}.db`));
+        const donorRecords = db.prepare('SELECT donor_id FROM donors').all() as { donor_id: number }[];
+        const donorIds = donorRecords.map(record => record.donor_id);
+
+        // Create tasks for each donor related to the event
+        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId, donorIds);
+        expect(taskCode).toBe(200);
+        expect(taskMessage).toBe(`Tasks created for event ID: ${eventId}`);
+
+        // Fetch tasks by event ID and verify they only include tasks for this event
+        const [fetchCode, tasks] = taskManager.getTasksByEvent(eventId);
+        expect(fetchCode).toBe(200);
+        expect(Array.isArray(tasks)).toBe(true);
+
+        const tasksArray = tasks as TaskSchema[];
+
+        // Verify each task is associated with the correct event and has the correct status
+        expect(tasksArray.length).toBe(donorIds.length);
+        tasksArray.forEach(task => {
+            expect(task.event_id).toBe(eventId);
+            expect(task.status).toBe('pending');
+            expect(donorIds).toContain(task.donor_id);
+        });
+
+        db.close(); // Close the database connection
+    });
+
+    test('should return an empty list if no tasks are associated with the event', () => {
+        const dbName = 'test_db_task_no_event_tasks';
+        const taskManager = new SQLiteContainer(dbName);
+
+        // Attempt to fetch tasks for a non-existent event ID
+        const nonExistentEventId = 999;
+        const [fetchCode, tasks] = taskManager.getTasksByEvent(nonExistentEventId);
+
+        expect(fetchCode).toBe(200);
+        expect(tasks).toEqual([]); // Expect an empty array since no tasks should match this event ID
+    });
+});

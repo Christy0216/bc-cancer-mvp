@@ -191,6 +191,24 @@ class SQLiteContainer implements TaskContainerInterface {
             return [500, `An error occurred: ${(error as Error).message}`];
         }
     }
+
+    /**
+     * Fetches all tasks for a specific event.
+     * @param eventId - The ID of the event.
+     */
+    public getTasksByEvent(eventId: number): DatabaseResponse<TaskSchema[]> {
+        const sqlQuery = `
+            SELECT * FROM tasks
+            WHERE event_id = ?
+        `;
+        try {
+            const rows = this.db.prepare(sqlQuery).all(eventId) as TaskSchema[];
+            return [200, rows];
+        } catch (error) {
+            console.error('Error fetching tasks for event:', (error as Error).message);
+            return [500, `An error occurred: ${(error as Error).message}`];
+        }
+    }
 }
 
 export default SQLiteContainer;

@@ -38,4 +38,5 @@ export interface TaskContainerInterface {
   createTasksForEvent(eventId: number, donorIds: number[]): DatabaseResponse<string>;
   updateTaskStatus(taskId: number, status: 'approved' | 'rejected', reason?: string): DatabaseResponse<string>;
   getTasksByPMM(pmm: string): DatabaseResponse<TaskSchema[]>;
+  getTasksByEvent(eventId: number): DatabaseResponse<TaskSchema[]>;
 }

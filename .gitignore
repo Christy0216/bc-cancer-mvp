@@ -16,3 +16,6 @@ Thumbs.db
 # Ignore SQLite database files
 *.db
 *.sqlite
+
+# Ignore coverage reports
+coverage/

@@ -182,26 +182,26 @@ class SQLiteContainer {
         }
     }
 
-    // /**
-    //  * Updates a task status to approved or rejected, with a reason if rejected.
-    //  * @param taskId - The ID of the task.
-    //  * @param status - The new status ('approved' or 'rejected').
-    //  * @param reason - Optional reason for rejection.
-    //  */
-    // public updateTaskStatus(taskId: number, status: 'approved' | 'rejected', reason?: string): [number, string] {
-    //     const sqlQuery = `
-    //         UPDATE tasks
-    //         SET status = ?, reason = ?
-    //         WHERE task_id = ?
-    //     `;
-    //     try {
-    //         this.db.prepare(sqlQuery).run(status, reason || null, taskId);
-    //         return [200, `Task ${taskId} updated to ${status}.`];
-    //     } catch (error) {
-    //         console.error('Error updating task:', (error as Error).message);
-    //         return [500, `An error occurred: ${(error as Error).message}`];
-    //     }
-    // }
+    /**
+     * Updates a task status to approved or rejected, with a reason if rejected.
+     * @param taskId - The ID of the task.
+     * @param status - The new status ('approved' or 'rejected').
+     * @param reason - Optional reason for rejection.
+     */
+    public updateTaskStatus(taskId: number, status: 'approved' | 'rejected', reason?: string): [number, string] {
+        const sqlQuery = `
+            UPDATE tasks
+            SET status = ?, reason = ?
+            WHERE task_id = ?
+        `;
+        try {
+            this.db.prepare(sqlQuery).run(status, reason || null, taskId);
+            return [200, `Task ${taskId} updated to ${status}.`];
+        } catch (error) {
+            console.error('Error updating task:', (error as Error).message);
+            return [500, `An error occurred: ${(error as Error).message}`];
+        }
+    }
 
     // /**
     //  * Fetches all tasks for a specific PMM, allowing them to view tasks only for their assigned donors.

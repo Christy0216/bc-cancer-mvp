@@ -233,3 +233,107 @@ describe('Task Creation Tests', () => {
     });
     
 });
+
+
+describe('Task Status Update Tests', () => {
+    test('should update task status to approved without a reason', () => {
+        // Initialize SQLite container and add an event and donors
+        const dbName = 'test_db_task_update';
+        const taskManager = new SQLiteContainer(dbName);
+
+        // Add a sample event
+        const event = {
+            name: 'Community Gala',
+            location: 'Los Angeles',
+            date: '2024-12-01',
+            description: 'A community event for charity.'
+        };
+        const [eventCode, eventMessage] = taskManager.addEvent(event);
+        const eventId = parseInt(eventMessage.split('ID: ')[1]);
+
+        expect(eventCode).toBe(200);
+
+        // Add a sample donor
+        const donors: DonorSchema[] = [
+            { donor_id: 0, first_name: 'Alice', nick_name: '', last_name: 'Green', pmm: 'PMM100', organization_name: 'Charity Works', city: 'Los Angeles', total_donations: 200 }
+        ];
+        const [donorCode, donorMessage] = taskManager.addDonors(donors);
+        expect(donorCode).toBe(200);
+
+        // Retrieve donor ID
+        const db = new Database(path.join(testDirectory, `${dbName}.db`));
+        const donorRecord = db.prepare('SELECT donor_id FROM donors').get() as { donor_id: number };
+        const donorId = donorRecord.donor_id;
+
+        // Create a task for the donor and event
+        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId, [donorId]);
+        expect(taskCode).toBe(200);
+
+        // Retrieve the created task
+        const taskRecord = db.prepare('SELECT task_id FROM tasks WHERE event_id = ? AND donor_id = ?').get(eventId, donorId) as { task_id: number };
+        const taskId = taskRecord.task_id;
+
+        // Update the task status to "approved" without a reason
+        const [updateCode, updateMessage] = taskManager.updateTaskStatus(taskId, 'approved');
+        expect(updateCode).toBe(200);
+        expect(updateMessage).toBe(`Task ${taskId} updated to approved.`);
+
+        // Verify the task status in the database
+        const updatedTask = db.prepare('SELECT * FROM tasks WHERE task_id = ?').get(taskId) as TaskSchema;
+        expect(updatedTask.status).toBe('approved');
+        expect(updatedTask.reason).toBeNull();
+
+        db.close(); // Close the database connection
+    });
+
+    test('should update task status to rejected with a reason', () => {
+        // Initialize SQLite container
+        const dbName = 'test_db_task_rejection';
+        const taskManager = new SQLiteContainer(dbName);
+
+        // Add a sample event and donor
+        const event = {
+            name: 'Winter Gala',
+            location: 'Seattle',
+            date: '2024-12-15',
+            description: 'A winter fundraising event.'
+        };
+        const [eventCode, eventMessage] = taskManager.addEvent(event);
+        const eventId = parseInt(eventMessage.split('ID: ')[1]);
+
+        expect(eventCode).toBe(200);
+
+        // Add a sample donor
+        const donors: DonorSchema[] = [
+            { donor_id: 0, first_name: 'Bob', nick_name: '', last_name: 'Brown', pmm: 'PMM101', organization_name: 'Hope Foundation', city: 'Seattle', total_donations: 300 }
+        ];
+        const [donorCode, donorMessage] = taskManager.addDonors(donors);
+        expect(donorCode).toBe(200);
+
+        // Retrieve donor ID
+        const db = new Database(path.join(testDirectory, `${dbName}.db`));
+        const donorRecord = db.prepare('SELECT donor_id FROM donors').get() as { donor_id: number };
+        const donorId = donorRecord.donor_id;
+
+        // Create a task for the donor and event
+        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId, [donorId]);
+        expect(taskCode).toBe(200);
+
+        // Retrieve the created task
+        const taskRecord = db.prepare('SELECT task_id FROM tasks WHERE event_id = ? AND donor_id = ?').get(eventId, donorId) as { task_id: number };
+        const taskId = taskRecord.task_id;
+
+        // Update the task status to "rejected" with a reason
+        const rejectionReason = 'Incomplete donor details';
+        const [updateCode, updateMessage] = taskManager.updateTaskStatus(taskId, 'rejected', rejectionReason);
+        expect(updateCode).toBe(200);
+        expect(updateMessage).toBe(`Task ${taskId} updated to rejected.`);
+
+        // Verify the task status and reason in the database
+        const updatedTask = db.prepare('SELECT * FROM tasks WHERE task_id = ?').get(taskId) as TaskSchema;
+        expect(updatedTask.status).toBe('rejected');
+        expect(updatedTask.reason).toBe(rejectionReason);
+
+        db.close(); // Close the database connection
+    });
+});

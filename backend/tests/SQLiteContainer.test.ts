@@ -1,10 +1,19 @@
+// SQLiteContainerTests.ts
 import SQLiteContainer from '../src/SQLiteContainer';
 import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
-import { EventSchema, DonorSchema, TaskSchema, TaskContainerInterface } from '../src/dbTypes';
+import { runTaskManagerTests } from './TaskManagerInterfaceTests';
+import { EventSchema, DonorSchema, TaskSchema } from '../src/dbTypes';
 
 const testDirectory = path.join(__dirname, '..');
+
+const createSQLiteContainer = () => new SQLiteContainer(`test_db_${Date.now()}`);
+
+// Run the interface compliance tests
+runTaskManagerTests(createSQLiteContainer);
+
+// Run the SQLiteContainer specific tests
 let mockDb: jest.Mocked<Database.Database>;
 
 const deleteTestDatabases = () => {
@@ -19,6 +28,11 @@ const deleteTestDatabases = () => {
     }
 };
 
+// Set up and tear down for each test suite
+beforeEach(() => deleteTestDatabases());
+afterEach(() => deleteTestDatabases());
+
+// Set up and tear down for all tests
 beforeAll(() => {
     deleteTestDatabases();
 });

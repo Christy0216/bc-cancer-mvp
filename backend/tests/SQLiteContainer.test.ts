@@ -105,6 +105,31 @@ describe('Event Management Tests', () => {
     });
 });
 
+describe('Event Retrieval Tests', () => {
+    test('should retrieve all events successfully', () => {
+        const eventManager = new SQLiteContainer('test_db_event_retrieval');
+
+        // Add a sample event to the database
+        const event = { name: 'Fundraiser Gala', location: 'Vancouver', date: '2024-10-30', description: 'A gala to support cancer research.' };
+        const [code] = eventManager.addEvent(event);
+        expect(code).toBe(200);
+
+        // Retrieve all events using getEvents()
+        const [fetchCode, fetchedEvents] = eventManager.getEvents();
+        expect(fetchCode).toBe(200);
+        expect(Array.isArray(fetchedEvents)).toBe(true);
+
+        // Verify that the fetched event matches the added event
+        expect(fetchedEvents.length).toBe(1);
+        const fetchedEvent = fetchedEvents[0] as EventSchema;
+        expect(fetchedEvent.name).toBe(event.name);
+        expect(fetchedEvent.location).toBe(event.location);
+        expect(fetchedEvent.date).toBe(event.date);
+        expect(fetchedEvent.description).toBe(event.description);
+    });
+});
+
+
 describe('Donor Management Tests', () => {
     test('should add donors successfully and verify them in the database', () => {
         // Initialize the SQLite container and ensure tables are created

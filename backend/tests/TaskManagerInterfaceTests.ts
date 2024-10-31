@@ -17,6 +17,37 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
             expect(message).toMatch(/Event added with ID/);
         });
 
+        test('should retrieve all events successfully', () => {
+          const eventManager = createTaskManager();
+
+          // Add sample events to the database
+          const events = [
+              { name: 'Fundraiser Gala', location: 'Vancouver', date: '2024-10-30', description: 'A gala to support cancer research.' },
+              { name: 'Annual Charity Event', location: 'Toronto', date: '2024-12-15', description: 'An annual event for charity donations.' }
+          ];
+
+          events.forEach(event => {
+              const [code] = eventManager.addEvent(event);
+              expect(code).toBe(200);
+          });
+
+          // Retrieve all events
+          const [fetchCode, fetchedEvents] = eventManager.getEvents();
+          expect(fetchCode).toBe(200);
+          expect(Array.isArray(fetchedEvents)).toBe(true);
+
+          // Verify that the fetched events match the added events
+          const fetchedEventsArray = fetchedEvents as EventSchema[];
+          expect(fetchedEventsArray.length).toBe(events.length);
+
+          fetchedEventsArray.forEach((fetchedEvent, index) => {
+              expect(fetchedEvent.name).toBe(events[index].name);
+              expect(fetchedEvent.location).toBe(events[index].location);
+              expect(fetchedEvent.date).toBe(events[index].date);
+              expect(fetchedEvent.description).toBe(events[index].description);
+          });
+        });
+
         test('should add donors successfully', () => {
             const donorManager = createTaskManager();
             const donors: Omit<DonorSchema, 'donor_id'>[] = [

@@ -113,6 +113,23 @@ class SQLiteContainer implements TaskContainerInterface {
     }
 
     /**
+     * Fetches all donors from the database.
+     * @returns A tuple containing the status code and an array of DonorSchema objects.
+     */
+    public getDonors(): DatabaseResponse<DonorSchema[]> {
+        const sqlQuery = `
+        SELECT * FROM donors
+    `;
+        try {
+            const rows = this.db.prepare(sqlQuery).all() as DonorSchema[];
+            return [200, rows];
+        } catch (error) {
+            console.error('Error fetching donors:', (error as Error).message);
+            return [500, `An error occurred: ${(error as Error).message}`];
+        }
+    }
+
+    /**
      * Adds a list of donors to the database.
      * @param donors - An array of donor objects.
      * @returns A tuple containing the status code and a message.

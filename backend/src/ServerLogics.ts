@@ -3,7 +3,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import axios from "axios";
 import SQLiteContainer from "./SQLiteContainer";
-import { DonorsResponse, City, CitiesResponse, EventResponse, ErrorResponse } from "./Types";
+import { DonorsResponse, City, CitiesResponse, EventResponse, ErrorResponse, DonorSchema, EventSchema, TaskSchema, TaskContainerInterface } from "./Types";
 
 /** Server **/
 
@@ -19,7 +19,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // Route to get donor list (default limit is 1)
-app.get("/api/donors", async (req: Request, res: Response<DonorsResponse | ErrorResponse>) => {
+app.get("/api/bccancer/donors", async (req: Request, res: Response<DonorsResponse | ErrorResponse>) => {
   try {
     const limit = req.query.limit || 1;
     const apiUrl = `https://bc-cancer-faux.onrender.com/donors?limit=${limit}&format=json`;
@@ -33,7 +33,7 @@ app.get("/api/donors", async (req: Request, res: Response<DonorsResponse | Error
 });
 
 // Route to fetch cities
-app.get("/api/cities", async (req: Request, res: Response<CitiesResponse | ErrorResponse>) => {
+app.get("/api/bccancer/cities", async (req: Request, res: Response<CitiesResponse | ErrorResponse>) => {
   try {
     const apiUrl = "https://bc-cancer-faux.onrender.com/cities?format=json";
     const response = await axios.get(apiUrl);
@@ -53,7 +53,7 @@ app.get("/api/cities", async (req: Request, res: Response<CitiesResponse | Error
 });
 
 // Route to generate matched donor list based on selected cities and limit
-app.get("/api/search-donors", async (req: Request, res: Response<EventResponse | ErrorResponse>): Promise<void> => {
+app.get("/api/bccancer/search-donors", async (req: Request, res: Response<EventResponse | ErrorResponse>): Promise<void> => {
   try {
     const cities = req.query.cities;
     const limit = req.query.limit || 1;
@@ -101,5 +101,25 @@ app.post("/api/event", async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to create event in the database." });
   }
 });
+
+// Route to add donors
+app.post("/api/donors", async (req: Request, res: Response) => {
+  const donors: Omit<DonorSchema, "donor_id">[] = req.body;
+  const [code, message] = taskContainer.addDonors(donors);
+
+  if (code === 200) {
+    res.status(200).json({ message });
+  } else {
+    res.status(500).json({ message: "Failed to add donors to the database." });
+  }
+});
+
+// Route to fetch donors
+app.get("/api/donors", (req: Request, res: Response) => {
+  const [statusCode, result] = taskContainer.getDonors();
+  res.status(statusCode).json(result);
+});
+
+
 
 export { app };

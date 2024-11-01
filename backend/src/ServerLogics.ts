@@ -1,4 +1,3 @@
-
 import express, { Request, Response } from "express";
 import cors from "cors";
 import axios from "axios";
@@ -14,11 +13,22 @@ app.use(express.json());
 const taskContainer = new SQLiteContainer('production');
 
 // Sample route
+/**
+ * GET /
+ * Sample route to check if the server is running.
+ * @returns A welcome message.
+ */
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello from the BC Cancer Donor System backend!");
 });
 
 // Route to get donor list (default limit is 1)
+/**
+ * GET /api/bccancer/donors
+ * Fetches a list of donors with an optional limit on the number of results.
+ * @param req.query.limit - The maximum number of results to return (default is 1).
+ * @returns A list of donors or an error response.
+ */
 app.get("/api/bccancer/donors", async (req: Request, res: Response<DonorsResponse | ErrorResponse>) => {
   try {
     const limit = parseInt(req.query.limit as string, 10) || 1;
@@ -33,6 +43,11 @@ app.get("/api/bccancer/donors", async (req: Request, res: Response<DonorsRespons
 });
 
 // Route to fetch cities
+/**
+ * GET /api/bccancer/cities
+ * Fetches a list of cities.
+ * @returns A list of cities or an error response.
+ */
 app.get("/api/bccancer/cities", async (req: Request, res: Response<CitiesResponse | ErrorResponse>) => {
   try {
     const apiUrl = "https://bc-cancer-faux.onrender.com/cities?format=json";
@@ -52,7 +67,12 @@ app.get("/api/bccancer/cities", async (req: Request, res: Response<CitiesRespons
   }
 });
 
-// Function to fetch donors based on cities and limit
+/**
+ * Fetches donor data from specified cities with a limit on the number of results.
+ * @param cities - A single city or an array of cities to fetch donor data from.
+ * @param limit - The maximum number of results to return (default is 1).
+ * @returns A promise that resolves to the event response or an error response.
+ */
 export async function fetchDonorsByCities(
   cities: string | string[],
   limit: number = 1
@@ -72,6 +92,13 @@ export async function fetchDonorsByCities(
 }
 
 // Route to generate matched donor list based on selected cities and limit
+/**
+ * GET /api/bccancer/search-donors
+ * Fetches a list of donors based on selected cities and limit.
+ * @param req.query.cities - A single city or an array of cities to fetch donor data from.
+ * @param req.query.limit - The maximum number of results to return (default is 1).
+ * @returns A list of donors or an error response.
+ */
 app.get("/api/bccancer/search-donors", async (req: Request, res: Response<EventResponse | ErrorResponse>): Promise<void> => {
   try {
     const cities = req.query.cities as string | string[];
@@ -97,6 +124,11 @@ app.get("/api/bccancer/search-donors", async (req: Request, res: Response<EventR
 });
 
 // Route to fetch all events
+/**
+ * GET /api/events
+ * Fetches all events from the database.
+ * @returns A list of events or an error response.
+ */
 app.get("/api/events", (req: Request, res: Response) => {
   const [statusCode, result] = taskContainer.getEvents();
   res.status(statusCode).json(result);
@@ -104,13 +136,10 @@ app.get("/api/events", (req: Request, res: Response) => {
 
 /**
  * Route to create an event
- * Sample request body:
- * {
- *   "name": "Xiaolai Chen",
- *   "location": "Changsha",
- *   "date": "2024-12-01",
- *   "description": "Some hapi event"
- * }
+ * POST /api/event
+ * Creates a new event in the database.
+ * @param req.body - The event details.
+ * @returns A success message or an error response.
  */
 app.post("/api/event", async (req: Request, res: Response) => {
   const eventDetails: Omit<EventSchema, "event_id"> = req.body;
@@ -125,17 +154,23 @@ app.post("/api/event", async (req: Request, res: Response) => {
 
 /**
  * Route to add a donor to the database
- * Request body should contain the donor details
+ * POST /api/donor
+ * Adds a new donor to the database.
+ * @param req.body - The donor details.
+ * @returns The donor ID or an error response.
+ * 
  * Sample request body:
- * {
- *   "first_name": "Test1",
- *   "nick_name": "Sean",
- *   "last_name": "Chen",
- *   "pmm": "Bobby Brown",
- *   "organization_name": "BMO",
- *   "city": "Vancouver",
- *   "total_donations": 13000
- * }
+ * [
+ *   {
+ *     "first_name": "Shen",
+ *     "nick_name": "Sean",
+ *     "last_name": "Chen",
+ *     "pmm": "Bobby Brown",
+ *     "organization_name": "BMO",
+ *     "city": "Vancouver",
+ *     "total_donations": 13000
+ *   }
+ * ]
  */
 app.post("/api/donor", async (req: Request, res: Response) => {
   const donor: Omit<DonorSchema, "donor_id"> = req.body;
@@ -150,7 +185,11 @@ app.post("/api/donor", async (req: Request, res: Response) => {
 
 /**
  * Route to add multiple donors to the database
- * Request body should contain an array of donor details
+ * POST /api/donors
+ * Adds multiple donors to the database.
+ * @param req.body - An array of donor details.
+ * @returns A success message or an error response.
+ * 
  * Sample request body:
  * [
  *   {
@@ -187,9 +226,13 @@ app.get("/api/tasks", (req: Request, res: Response) => {
   res.status(statusCode).json(result);
 });
 
-// Route to create tasks for an event
 /**
- * Route to create tasks for an event
+ * POST /api/tasks
+ * Creates tasks for an event based on the provided event ID and donor IDs.
+ * @param req.body.eventId - The ID of the event.
+ * @param req.body.donorIds - An array of donor IDs.
+ * @returns A success message or an error response.
+ * 
  * Sample request body:
  * {
  *   "eventId": 1,
@@ -207,7 +250,13 @@ app.post("/api/tasks", async (req: Request, res: Response) => {
   }
 });
 
-// Route to find donor by name
+/**
+ * GET /api/donor/find
+ * Finds a donor by their first and last name.
+ * @param req.query.firstName - The first name of the donor.
+ * @param req.query.lastName - The last name of the donor.
+ * @returns The donor details or an error response.
+ */
 app.get("/api/donor/find", (req: Request, res: Response) => {
   const { firstName, lastName } = req.query;
   const [statusCode, result] = taskContainer.findDonorByName(firstName as string, lastName as string);
@@ -216,6 +265,16 @@ app.get("/api/donor/find", (req: Request, res: Response) => {
 
 /**
  * Route to set up an event (create event, fetch donors, add donors, create tasks)
+ * POST /api/setup-event
+ * Sets up an event by creating the event, fetching donors, adding donors, and creating tasks.
+ * @param req.body.name - The name of the event.
+ * @param req.body.location - The location of the event.
+ * @param req.body.date - The date of the event.
+ * @param req.body.description - The description of the event.
+ * @param req.body.cities - An array of cities to fetch donor data from.
+ * @param req.body.limit - The maximum number of results to return (default is 1).
+ * @returns A success message or an error response.
+ * 
  * Sample request body:
  * {
  *   "name": "Test1",

@@ -94,7 +94,7 @@ app.get("/api/events", (req: Request, res: Response) => {
 app.post("/api/event", async (req: Request, res: Response) => {
   const eventDetails: Omit<EventSchema, "event_id"> = req.body;
   const eventResult = taskContainer.addEvent(eventDetails);
-  
+
   if (eventResult[0] === 200) {
     res.status(200).json({ message: eventResult[1] });
   } else {
@@ -129,12 +129,68 @@ app.get("/api/tasks", (req: Request, res: Response) => {
 // Route to create tasks for an event
 app.post("/api/tasks", async (req: Request, res: Response) => {
   const { eventId, donorIds } = req.body;  // eventId and array of donorIds
-  
+
   const taskCreationResult = taskContainer.createTasksForEvent(eventId, donorIds);
   if (taskCreationResult[0] === 200) {
     res.status(200).json({ message: taskCreationResult[1] });
   } else {
     res.status(500).json({ message: "Failed to create tasks for matched donors." });
+  }
+});
+
+// Route to set up an event (create event, fetch donors, add donors, create tasks)
+app.post("/api/setup-event", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, location, date, description, cities, limit } = req.body;
+
+    // Step 1: Create the event
+    const eventResult = taskContainer.addEvent({ name, location, date, description });
+    if (eventResult[0] !== 200) {
+      res.status(500).json({ message: "Failed to create event in the database." });
+      return;
+    }
+    const eventId = eventResult[1]; // Now eventId is already a number
+    console.log(`Event created with ID: ${eventId}`);
+
+    // // Step 2: Fetch donors based on cities and limit from the external API
+    // const cityArray = Array.isArray(cities) ? cities : [cities];
+    // const queryParams = cityArray.map(city => `cities=${encodeURIComponent(city)}`).join('&');
+    // const apiUrl = `https://bc-cancer-faux.onrender.com/event?${queryParams}&limit=${limit || 1}&format=json`;
+    // const donorResponse = await axios.get<EventResponse>(apiUrl);
+    // const matchedDonors = donorResponse.data.data;
+
+    // // Step 3: Add donors to the database
+    // const donorRecords = matchedDonors.map(donor => ({
+    //   first_name: donor[0] as string,
+    //   nick_name: donor[1] as string,
+    //   last_name: donor[2] as string,
+    //   pmm: donor[3] as string,
+    //   organization_name: donor[4] as string,
+    //   city: donor[5] as string,
+    //   total_donations: donor[6] as number,
+    // }));
+    // const donorsResult = taskContainer.addDonors(donorRecords);
+    // if (donorsResult[0] !== 200) {
+    //   res.status(500).json({ message: "Failed to add donors to the database." });
+    //   return;
+    // }
+
+    // // Step 4: Create tasks for the event and donors
+    // const donorIds = matchedDonors.map((_, index) => index + 1); // Assumes IDs align with order
+    // const taskCreationResult = taskContainer.createTasksForEvent(eventId, donorIds);
+
+    // if (taskCreationResult[0] === 200) {
+    //   res.status(200).json({
+    //     message: `Event setup completed with event ID: ${eventId}`,
+    //     event_id: eventId,
+    //     tasks_status: taskCreationResult[1],
+    //   });
+    // } else {
+    //   res.status(500).json({ message: "Failed to create tasks for matched donors." });
+    // }
+  } catch (error) {
+    console.error("Error in setting up event:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 

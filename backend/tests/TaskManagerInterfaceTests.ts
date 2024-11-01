@@ -14,7 +14,7 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
             };
             const [code, message] = eventManager.addEvent(event);
             expect(code).toBe(200);
-            expect(message).toMatch(/Event added with ID/);
+            expect(message).toBe(1);  // Event ID
         });
 
         test('should retrieve all events successfully', () => {
@@ -67,8 +67,7 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
                 date: '2024-11-25',
                 description: 'A fundraiser event for charity.'
             };
-            const [eventCode, eventMessage] = taskManager.addEvent(event);
-            const eventId = parseInt(eventMessage.split('ID: ')[1]);
+            const [eventCode, eventId] = taskManager.addEvent(event);
 
             const donors: Omit<DonorSchema, 'donor_id'>[] = [
                 { first_name: 'John', nick_name: '', last_name: 'Doe', pmm: 'PMM1', organization_name: 'Org1', city: 'Chicago', total_donations: 100 },
@@ -80,7 +79,7 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
 
             const donorIds = donors.map((_, index) => index + 1);  // Assuming IDs are sequentially assigned
 
-            const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId, donorIds);
+            const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId as number, donorIds);
             expect(taskCode).toBe(200);
             expect(taskMessage).toBe(`Tasks created for event ID: ${eventId}`);
         });
@@ -90,16 +89,15 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
 
             // Setup: create event, donor, and task
             const event = { name: 'Gala Event', location: 'NY', date: '2024-11-25', description: 'Charity event' };
-            const [eventCode, eventMessage] = taskManager.addEvent(event);
-            const eventId = parseInt(eventMessage.split('ID: ')[1]);
+            const [eventCode, eventId] = taskManager.addEvent(event);
 
             const donors: Omit<DonorSchema, 'donor_id'>[] = [{ first_name: 'Alice', nick_name: '', last_name: 'Green', pmm: 'PMM100', organization_name: 'Charity Org', city: 'LA', total_donations: 1000 }];
             taskManager.addDonors(donors);
             const donorIds = donors.map((_, index) => index + 1);
-            taskManager.createTasksForEvent(eventId, donorIds);
+            taskManager.createTasksForEvent(eventId as number, donorIds);
 
             // Get task ID for verification
-            const [taskFetchCode, tasks] = taskManager.getTasksByEvent(eventId);
+            const [taskFetchCode, tasks] = taskManager.getTasksByEvent(eventId as number);
             const taskId = (tasks[0] as TaskSchema).task_id;
 
             // Test updating task status
@@ -113,8 +111,7 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
 
             // Setup: create event, donors, and tasks
             const event = { name: 'Donor Event', location: 'SF', date: '2024-12-01', description: 'Donation drive' };
-            const [eventCode, eventMessage] = taskManager.addEvent(event);
-            const eventId = parseInt(eventMessage.split('ID: ')[1]);
+            const [eventCode, eventId] = taskManager.addEvent(event);
 
             const donors: Omit<DonorSchema, 'donor_id'>[] = [
                 { first_name: 'Bob', nick_name: '', last_name: 'Brown', pmm: 'PMM100', organization_name: 'Org1', city: 'LA', total_donations: 500 },
@@ -122,7 +119,7 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
             ];
             taskManager.addDonors(donors);
             const donorIds = donors.map((_, index) => index + 1);
-            taskManager.createTasksForEvent(eventId, donorIds);
+            taskManager.createTasksForEvent(eventId as number, donorIds);
 
             // Test retrieving tasks by PMM
             const [fetchCode, tasks] = taskManager.getTasksByPMM('PMM100');
@@ -143,8 +140,7 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
 
             // Setup: create event, donors, and tasks
             const event = { name: 'End of Year Event', location: 'Boston', date: '2024-12-15', description: 'Annual fundraiser' };
-            const [eventCode, eventMessage] = taskManager.addEvent(event);
-            const eventId = parseInt(eventMessage.split('ID: ')[1]);
+            const [eventCode, eventId] = taskManager.addEvent(event);
 
             const donors: Omit<DonorSchema, 'donor_id'>[] = [
                 { first_name: 'Tom', nick_name: '', last_name: 'White', pmm: 'PMM200', organization_name: 'OrgA', city: 'Boston', total_donations: 600 },
@@ -152,10 +148,10 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
             ];
             taskManager.addDonors(donors);
             const donorIds = donors.map((_, index) => index + 1);
-            taskManager.createTasksForEvent(eventId, donorIds);
+            taskManager.createTasksForEvent(eventId as number, donorIds);
 
             // Test retrieving tasks by event ID
-            const [fetchCode, tasks] = taskManager.getTasksByEvent(eventId);
+            const [fetchCode, tasks] = taskManager.getTasksByEvent(eventId as number);
             expect(fetchCode).toBe(200);
             expect(tasks).toHaveLength(donorIds.length);
             if (Array.isArray(tasks)) {

@@ -62,7 +62,7 @@ describe('Event Management Tests', () => {
         // Add the event
         const [code, message] = eventManager.addEvent(event);
         expect(code).toBe(200);
-        expect(message).toMatch(/Event added with ID/);
+        expect(message).toBe(1);  // Event ID
 
         // Verify the event exists in the database
         const db = new Database(path.join(testDirectory, 'test_db_event_verification.db'));
@@ -228,8 +228,7 @@ describe('Task Creation Tests', () => {
             date: '2024-11-25',
             description: 'A fundraiser event for charity.'
         };
-        const [eventCode, eventMessage] = taskManager.addEvent(event);
-        const eventId = parseInt(eventMessage.split('ID: ')[1]);
+        const [eventCode, eventId] = taskManager.addEvent(event);
     
         expect(eventCode).toBe(200);
         expect(eventId).toBeDefined();
@@ -251,7 +250,7 @@ describe('Task Creation Tests', () => {
         expect(donorIds.length).toBe(donors.length);
     
         // Call createTasksForEvent with the eventId and donorIds
-        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId, donorIds);
+        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId as number, donorIds);
         expect(taskCode).toBe(200);
         expect(taskMessage).toBe(`Tasks created for event ID: ${eventId}`);
     
@@ -284,8 +283,7 @@ describe('Task Status Update Tests', () => {
             date: '2024-12-01',
             description: 'A community event for charity.'
         };
-        const [eventCode, eventMessage] = taskManager.addEvent(event);
-        const eventId = parseInt(eventMessage.split('ID: ')[1]);
+        const [eventCode, eventId] = taskManager.addEvent(event);
 
         expect(eventCode).toBe(200);
 
@@ -302,7 +300,7 @@ describe('Task Status Update Tests', () => {
         const donorId = donorRecord.donor_id;
 
         // Create a task for the donor and event
-        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId, [donorId]);
+        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId as number, [donorId]);
         expect(taskCode).toBe(200);
 
         // Retrieve the created task
@@ -334,8 +332,7 @@ describe('Task Status Update Tests', () => {
             date: '2024-12-15',
             description: 'A winter fundraising event.'
         };
-        const [eventCode, eventMessage] = taskManager.addEvent(event);
-        const eventId = parseInt(eventMessage.split('ID: ')[1]);
+        const [eventCode, eventId] = taskManager.addEvent(event);
 
         expect(eventCode).toBe(200);
 
@@ -352,7 +349,7 @@ describe('Task Status Update Tests', () => {
         const donorId = donorRecord.donor_id;
 
         // Create a task for the donor and event
-        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId, [donorId]);
+        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId as number, [donorId]);
         expect(taskCode).toBe(200);
 
         // Retrieve the created task
@@ -388,8 +385,7 @@ describe('Task Retrieval by PMM Tests', () => {
             date: '2024-03-20',
             description: 'A spring fundraising event for charity.'
         };
-        const [eventCode, eventMessage] = taskManager.addEvent(event);
-        const eventId = parseInt(eventMessage.split('ID: ')[1]);
+        const [eventCode, eventId] = taskManager.addEvent(event);
 
         expect(eventCode).toBe(200);
 
@@ -408,7 +404,7 @@ describe('Task Retrieval by PMM Tests', () => {
         const donorIdsForPMM100 = donorRecords.filter(record => record.pmm === 'PMM100').map(record => record.donor_id);
 
         // Create tasks for each donor related to the event
-        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId, donorIdsForPMM100);
+        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId as number, donorIdsForPMM100);
         expect(taskCode).toBe(200);
         expect(taskMessage).toBe(`Tasks created for event ID: ${eventId}`);
 
@@ -454,8 +450,7 @@ describe('Task Retrieval by Event Tests', () => {
             date: '2024-09-15',
             description: 'A charity event for autumn.'
         };
-        const [eventCode, eventMessage] = taskManager.addEvent(event);
-        const eventId = parseInt(eventMessage.split('ID: ')[1]);
+        const [eventCode, eventId] = taskManager.addEvent(event);
 
         expect(eventCode).toBe(200);
 
@@ -473,12 +468,12 @@ describe('Task Retrieval by Event Tests', () => {
         const donorIds = donorRecords.map(record => record.donor_id);
 
         // Create tasks for each donor related to the event
-        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId, donorIds);
+        const [taskCode, taskMessage] = taskManager.createTasksForEvent(eventId as number, donorIds);
         expect(taskCode).toBe(200);
         expect(taskMessage).toBe(`Tasks created for event ID: ${eventId}`);
 
         // Fetch tasks by event ID and verify they only include tasks for this event
-        const [fetchCode, tasks] = taskManager.getTasksByEvent(eventId);
+        const [fetchCode, tasks] = taskManager.getTasksByEvent(eventId as number);
         expect(fetchCode).toBe(200);
         expect(Array.isArray(tasks)).toBe(true);
 

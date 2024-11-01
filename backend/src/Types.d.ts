@@ -61,7 +61,7 @@ export type DatabaseResponse<T> = [number, T | string];
 // Defines the main interface for the SQLiteContainer class methods
 export interface TaskContainerInterface {
   getEvents(): DatabaseResponse<EventSchema[]>;
-  addEvent(event: Omit<EventSchema, 'event_id'>): DatabaseResponse<string>;
+  addEvent(event: Omit<EventSchema, 'event_id'>): DatabaseResponse<number>;
   getDonors(): DatabaseResponse<DonorSchema[]>;
   addDonors(donors: Omit<DonorSchema, 'donor_id'>[]): DatabaseResponse<string>;
   createTasksForEvent(eventId: number, donorIds: number[]): DatabaseResponse<string>;

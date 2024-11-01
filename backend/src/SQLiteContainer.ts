@@ -100,7 +100,7 @@ class SQLiteContainer implements TaskContainerInterface {
      * @param event - The event object containing event details.
      * @returns A tuple containing the status code and a message.
      */
-    public addEvent(event: Omit<EventSchema, 'event_id'>): DatabaseResponse<string> {
+    public addEvent(event: Omit<EventSchema, 'event_id'>): DatabaseResponse<number> {
         const sqlQuery = `
             INSERT INTO events (name, location, date, description)
             VALUES (?, ?, ?, ?)
@@ -108,12 +108,13 @@ class SQLiteContainer implements TaskContainerInterface {
         try {
             const stmt = this.db.prepare(sqlQuery);
             const result = stmt.run(event.name, event.location, event.date, event.description);
-            return [200, `Event added with ID: ${result.lastInsertRowid}`];
+            return [200, result.lastInsertRowid as number]; // Directly return the ID as a number
         } catch (error) {
             console.error('Error adding event:', (error as Error).message);
             return [500, `An error occurred: ${(error as Error).message}`];
         }
     }
+    
 
     /**
      * Fetches all donors from the database.

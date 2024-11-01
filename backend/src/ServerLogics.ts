@@ -114,6 +114,18 @@ app.post("/api/event", async (req: Request, res: Response) => {
   }
 });
 
+// Route to add a donor
+app.post("/api/donor", async (req: Request, res: Response) => {
+  const donor: Omit<DonorSchema, "donor_id"> = req.body;
+  const [code, donor_id] = taskContainer.addDonor(donor);
+
+  if (code === 200) {
+    res.status(200).json({ donor_id });
+  } else {
+    res.status(500).json({ message: "Failed to add donor to the database." });
+  }
+});
+
 // Route to add donors
 app.post("/api/donors", async (req: Request, res: Response) => {
   const donors: Omit<DonorSchema, "donor_id">[] = req.body;
@@ -157,7 +169,7 @@ app.get("/api/donor/find", (req: Request, res: Response) => {
   res.status(statusCode).json(result);
 });
 
-// Route to set up an event (create event, fetch donors, add donors, create tasks)
+// // Route to set up an event (create event, fetch donors, add donors, create tasks)
 // app.post("/api/setup-event", async (req: Request, res: Response): Promise<void> => {
 //   try {
 //     const { name, location, date, description, cities, limit } = req.body;
@@ -196,40 +208,41 @@ app.get("/api/donor/find", (req: Request, res: Response) => {
 //       const existingDonor = taskContainer.findDonorByName(donorRecord.first_name, donorRecord.last_name);
 //       let donorId: number;
 
-//       if (existingDonor[0] === 200 && existingDonor[1]) {
-//         // Use existing donor_id
-//         donorId = (existingDonor[1] as DonorSchema).donor_id;
-//       } else {
-//         // Add new donor to the database
-//         const addDonorResult = taskContainer.addDonors([donorRecord]);
-//         if (addDonorResult[0] !== 200) {
-//           res.status(500).json({ message: "Failed to add a donor to the database." });
+//       if (existingDonor[0] === 200) {
+//         if (typeof existingDonor[1] === 'object' && 'donor_id' in existingDonor[1]) {
+//           donorId = (existingDonor[1] as DonorSchema).donor_id;
+//         } else {
+//           res.status(500).json({ message: "Failed to retrieve existing donor information." });
 //           return;
 //         }
-//         donorId = this.db.lastInsertRowid; // Retrieve new donor ID
+//       } else {
+//         // Add donor to database
+//         const addDonorResult = taskContainer.addDonors([donorRecord]);
+//         if (addDonorResult[0] !== 200) {
+//           res.status(500).json({ message: "Failed to add donors to the database." });
+//           return;
+//         }
+//         donorId = parseInt(addDonorResult[1], 10);
 //       }
-
-//       // Collect donor_id for task creation
-//       donorIds.push(donorId);
 //     }
 
-//     // Step 4: Create tasks for each donor and the event
-//     const taskCreationResult = taskContainer.createTasksForEvent(eventId, donorIds);
+//     //   // Step 4: Create tasks for each donor and the event
+//     //   const taskCreationResult = taskContainer.createTasksForEvent(eventId, donorIds);
 
-//     if (taskCreationResult[0] === 200) {
-//       res.status(200).json({
-//         message: `Event setup completed with event ID: ${eventId}`,
-//         event_id: eventId,
-//         tasks_status: taskCreationResult[1],
-//       });
-//     } else {
-//       res.status(500).json({ message: "Failed to create tasks for matched donors." });
-//     }
-//   } catch (error) {
-//     console.error("Error in setting up event:", error);
-//     res.status(500).json({ message: "Internal Server Error" });
-//   }
-// });
+//     //   if (taskCreationResult[0] === 200) {
+//     //     res.status(200).json({
+//     //       message: `Event setup completed with event ID: ${eventId}`,
+//     //       event_id: eventId,
+//     //       tasks_status: taskCreationResult[1],
+//     //     });
+//     //   } else {
+//     //     res.status(500).json({ message: "Failed to create tasks for matched donors." });
+//     //   }
+//     // } catch (error) {
+//     //   console.error("Error in setting up event:", error);
+//     //   res.status(500).json({ message: "Internal Server Error" });
+//     // }
+//   });
 
 
 

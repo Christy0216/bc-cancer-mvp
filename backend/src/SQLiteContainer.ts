@@ -137,17 +137,45 @@ class SQLiteContainer implements TaskContainerInterface {
      * Fetches donors by name from the database.
      * @returns A tuple containing the status code and an array of DonorSchema objects.
      */
-    public findDonorByName(firstName: string, lastName: string): DatabaseResponse<DonorSchema[]> {
+    public findDonorByName(firstName: string, lastName: string): DatabaseResponse<DonorSchema> {
         const sqlQuery = `
         SELECT * FROM donors
         WHERE first_name = ? AND last_name = ?
     `;
         try {
-            const rows = this.db.prepare(sqlQuery).all(firstName, lastName) as DonorSchema[];
-            return [200, rows];
+            const row = this.db.prepare(sqlQuery).get(firstName, lastName) as DonorSchema;
+            return [200, row];
         } catch (error) {
             console.error('Error fetching donors by name:', (error as Error).message);
             return [500, `An error occurred: ${(error as Error).message}`];
+        }
+    }
+
+    /**
+     * Add a donor to the database.
+     * @param donor - The donor object.
+     * @returns the donor_id of the newly added donor.
+     */
+    public addDonor(donor: Omit<DonorSchema, 'donor_id'>): [number, number] {
+        const sqlQuery = `
+        INSERT INTO donors (first_name, nick_name, last_name, pmm, organization_name, city, total_donations)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+        try {
+            const stmt = this.db.prepare(sqlQuery);
+            const result = stmt.run(
+                donor.first_name,
+                donor.nick_name,
+                donor.last_name,
+                donor.pmm,
+                donor.organization_name,
+                donor.city,
+                donor.total_donations
+            );
+            return [200, result.lastInsertRowid as number];
+        } catch (error) {
+            console.error('Error adding donor:', (error as Error).message);
+            return [500, -1];
         }
     }
 

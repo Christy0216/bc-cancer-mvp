@@ -251,6 +251,30 @@ app.post("/api/tasks", async (req: Request, res: Response) => {
 });
 
 /**
+ * PUT /api/task
+ * Updates the status of a task.
+ * @param req.body.taskId - The ID of the task to update.
+ * @param req.body.status - The new status of the task. has to be one of "approved" or "rejected".
+ * @returns A success message or an error response.
+ * 
+ * Sample request body:
+ * {
+ *   "taskId": 1,
+ *   "status": "approved"
+ * }
+ */
+app.put("/api/task", async (req: Request, res: Response) => {
+  const { taskId, status } = req.body;
+
+  const updateResult = taskContainer.updateTaskStatus(taskId, status);
+  if (updateResult[0] === 200) {
+    res.status(200).json({ message: updateResult[1] });
+  } else {
+    res.status(500).json({ message: "Failed to update task status." });
+  }
+});
+
+/**
  * GET /api/donor/find
  * Finds a donor by their first and last name.
  * @param req.query.firstName - The first name of the donor.

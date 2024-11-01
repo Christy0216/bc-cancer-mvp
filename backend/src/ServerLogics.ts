@@ -92,8 +92,8 @@ app.get("/api/events", (req: Request, res: Response) => {
 
 // Route to create an event
 app.post("/api/event", async (req: Request, res: Response) => {
-  const { name, location, date, description } = req.body;
-  const eventResult = taskContainer.addEvent({ name, location, date, description });
+  const eventDetails: Omit<EventSchema, "event_id"> = req.body;
+  const eventResult = taskContainer.addEvent(eventDetails);
   
   if (eventResult[0] === 200) {
     res.status(200).json({ message: eventResult[1] });
@@ -124,6 +124,18 @@ app.get("/api/donors", (req: Request, res: Response) => {
 app.get("/api/tasks", (req: Request, res: Response) => {
   const [statusCode, result] = taskContainer.getTasks();
   res.status(statusCode).json(result);
+});
+
+// Route to create tasks for an event
+app.post("/api/tasks", async (req: Request, res: Response) => {
+  const { eventId, donorIds } = req.body;  // eventId and array of donorIds
+  
+  const taskCreationResult = taskContainer.createTasksForEvent(eventId, donorIds);
+  if (taskCreationResult[0] === 200) {
+    res.status(200).json({ message: taskCreationResult[1] });
+  } else {
+    res.status(500).json({ message: "Failed to create tasks for matched donors." });
+  }
 });
 
 

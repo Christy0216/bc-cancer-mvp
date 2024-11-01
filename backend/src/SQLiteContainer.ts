@@ -33,6 +33,9 @@ class SQLiteContainer implements TaskContainerInterface {
      * Initializes the database schema by creating the necessary tables.
      */
     private initializeDatabase() {
+        // Enable foreign key constraints
+        this.db.exec(`PRAGMA foreign_keys = ON;`);
+
         // Create events table
         this.db.exec(`
             CREATE TABLE IF NOT EXISTS events (

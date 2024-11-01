@@ -102,7 +102,16 @@ app.get("/api/events", (req: Request, res: Response) => {
   res.status(statusCode).json(result);
 });
 
-// Route to create an event
+/**
+ * Route to create an event
+ * Sample request body:
+ * {
+ *   "name": "Xiaolai Chen",
+ *   "location": "Changsha",
+ *   "date": "2024-12-01",
+ *   "description": "Some hapi event"
+ * }
+ */
 app.post("/api/event", async (req: Request, res: Response) => {
   const eventDetails: Omit<EventSchema, "event_id"> = req.body;
   const eventResult = taskContainer.addEvent(eventDetails);
@@ -114,7 +123,20 @@ app.post("/api/event", async (req: Request, res: Response) => {
   }
 });
 
-// Route to add a donor
+/**
+ * Route to add a donor to the database
+ * Request body should contain the donor details
+ * Sample request body:
+ * {
+ *   "first_name": "Test1",
+ *   "nick_name": "Sean",
+ *   "last_name": "Chen",
+ *   "pmm": "Bobby Brown",
+ *   "organization_name": "BMO",
+ *   "city": "Vancouver",
+ *   "total_donations": 13000
+ * }
+ */
 app.post("/api/donor", async (req: Request, res: Response) => {
   const donor: Omit<DonorSchema, "donor_id"> = req.body;
   const [code, donor_id] = taskContainer.addDonor(donor);
@@ -126,7 +148,22 @@ app.post("/api/donor", async (req: Request, res: Response) => {
   }
 });
 
-// Route to add donors
+/**
+ * Route to add multiple donors to the database
+ * Request body should contain an array of donor details
+ * Sample request body:
+ * [
+ *   {
+ *     "first_name": "Shen",
+ *     "nick_name": "Sean",
+ *     "last_name": "Chen",
+ *     "pmm": "Bobby Brown",
+ *     "organization_name": "BMO",
+ *     "city": "Vancouver",
+ *     "total_donations": 13000
+ *   }
+ * ]
+ */
 app.post("/api/donors", async (req: Request, res: Response) => {
   const donors: Omit<DonorSchema, "donor_id">[] = req.body;
   const [code, message] = taskContainer.addDonors(donors);
@@ -151,6 +188,14 @@ app.get("/api/tasks", (req: Request, res: Response) => {
 });
 
 // Route to create tasks for an event
+/**
+ * Route to create tasks for an event
+ * Sample request body:
+ * {
+ *   "eventId": 1,
+ *   "donorIds": [3, 4]
+ * }
+ */
 app.post("/api/tasks", async (req: Request, res: Response) => {
   const { eventId, donorIds } = req.body;  // eventId and array of donorIds
 
@@ -169,7 +214,18 @@ app.get("/api/donor/find", (req: Request, res: Response) => {
   res.status(statusCode).json(result);
 });
 
-// Route to set up an event (create event, fetch donors, add donors, create tasks)
+/**
+ * Route to set up an event (create event, fetch donors, add donors, create tasks)
+ * Sample request body:
+ * {
+ *   "name": "Test1",
+ *   "location": "Vancouver",
+ *   "date": "2024-12-15",
+ *   "description": "An annual event to gather donors for the support of cancer research initiatives.",
+ *   "cities": ["Vancouver", "Burnaby"],
+ *   "limit": 50
+ * }
+ */
 app.post("/api/setup-event", async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, location, date, description, cities, limit } = req.body;

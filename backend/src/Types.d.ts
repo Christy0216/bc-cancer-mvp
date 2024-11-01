@@ -63,6 +63,7 @@ export interface TaskContainerInterface {
   getEvents(): DatabaseResponse<EventSchema[]>;
   addEvent(event: Omit<EventSchema, 'event_id'>): DatabaseResponse<number>;
   getDonors(): DatabaseResponse<DonorSchema[]>;
+  findDonorByName(firstName: string, lastName: string): DatabaseResponse<DonorSchema[]>;
   addDonors(donors: Omit<DonorSchema, 'donor_id'>[]): DatabaseResponse<string>;
   createTasksForEvent(eventId: number, donorIds: number[]): DatabaseResponse<string>;
   updateTaskStatus(taskId: number, status: 'approved' | 'rejected', reason?: string): DatabaseResponse<string>;

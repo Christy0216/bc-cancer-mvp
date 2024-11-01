@@ -114,7 +114,7 @@ class SQLiteContainer implements TaskContainerInterface {
             return [500, `An error occurred: ${(error as Error).message}`];
         }
     }
-    
+
 
     /**
      * Fetches all donors from the database.
@@ -135,16 +135,21 @@ class SQLiteContainer implements TaskContainerInterface {
 
     /**
      * Fetches donors by name from the database.
-     * @returns A tuple containing the status code and an array of DonorSchema objects.
+     * @returns A tuple containing the status code and a DonorSchema object or a message.
      */
     public findDonorByName(firstName: string, lastName: string): DatabaseResponse<DonorSchema> {
         const sqlQuery = `
-        SELECT * FROM donors
-        WHERE first_name = ? AND last_name = ?
+    SELECT * FROM donors
+    WHERE first_name = ? AND last_name = ?
     `;
         try {
-            const row = this.db.prepare(sqlQuery).get(firstName, lastName) as DonorSchema;
-            return [200, row];
+            const row = this.db.prepare(sqlQuery).get(firstName, lastName) as DonorSchema | undefined;
+
+            if (row) {
+                return [200, row];
+            } else {
+                return [404, "Donor not found"];  // Return 404 if no donor is found
+            }
         } catch (error) {
             console.error('Error fetching donors by name:', (error as Error).message);
             return [500, `An error occurred: ${(error as Error).message}`];

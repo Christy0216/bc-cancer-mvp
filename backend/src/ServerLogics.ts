@@ -169,80 +169,86 @@ app.get("/api/donor/find", (req: Request, res: Response) => {
   res.status(statusCode).json(result);
 });
 
-// // Route to set up an event (create event, fetch donors, add donors, create tasks)
-// app.post("/api/setup-event", async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const { name, location, date, description, cities, limit } = req.body;
+// Route to set up an event (create event, fetch donors, add donors, create tasks)
+app.post("/api/setup-event", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, location, date, description, cities, limit } = req.body;
 
-//     // Step 1: Create the event
-//     const eventResult = taskContainer.addEvent({ name, location, date, description });
-//     if (eventResult[0] !== 200) {
-//       res.status(500).json({ message: "Failed to create event in the database." });
-//       return;
-//     }
-//     const eventId = eventResult[1]; // Now eventId is already a number
-//     // console.log(`Event created with ID: ${eventId}`);
+    // Step 1: Create the event
+    const eventResult = taskContainer.addEvent({ name, location, date, description });
+    if (eventResult[0] !== 200) {
+      res.status(500).json({ message: "Failed to create event in the database." });
+      return;
+    }
+    const eventId = eventResult[1]; // Event ID should already be a number
+    // console.log(`Event created with ID: ${eventId}`);
 
-//     // Step 2: Fetch donors based on cities and limit from the external API
-//     const matchedDonors = await fetchDonorsByCities(cities, limit);
-//     if (!("data" in matchedDonors)) {
-//       res.status(500).json({ message: matchedDonors.message });
-//       return;
-//     }
-//     // console.log("Matched donors:", matchedDonors.data);
+    // Step 2: Fetch donors based on cities and limit from the external API
+    const matchedDonors = await fetchDonorsByCities(cities, limit);
+    if (!("data" in matchedDonors)) {
+      res.status(500).json({ message: matchedDonors.message });
+      return;
+    }
+    // console.log("Matched donors:", matchedDonors.data);
 
-//     // Prepare donor records for insertion
-//     const donorRecords: Omit<DonorSchema, "donor_id">[] = matchedDonors.data.map(donor => ({
-//       first_name: donor[5] as string,
-//       nick_name: donor[6] as string,
-//       last_name: donor[7] as string,
-//       pmm: donor[0] as string,
-//       organization_name: donor[8] as string,
-//       city: donor[20] as string,
-//       total_donations: donor[9] as number,
-//     }));
+    // Step 3: Prepare donor records for insertion
+    const donorIds: number[] = [];
+    const donorRecords: Omit<DonorSchema, "donor_id">[] = matchedDonors.data.map(donor => ({
+      first_name: donor[5] as string,
+      nick_name: donor[6] as string,
+      last_name: donor[7] as string,
+      pmm: donor[0] as string,
+      organization_name: donor[8] as string,
+      city: donor[20] as string,
+      total_donations: donor[9] as number,
+    }));
 
-//     // console.log("Donor records:", donorRecords);
-//     for (const donorRecord of donorRecords) {
-//       // Check if donor already exists
-//       const existingDonor = taskContainer.findDonorByName(donorRecord.first_name, donorRecord.last_name);
-//       let donorId: number;
+    for (const donorRecord of donorRecords) {
+      // Check if donor already exists
+      const existingDonor = taskContainer.findDonorByName(donorRecord.first_name, donorRecord.last_name);
+      let donorId: number | null = null;
 
-//       if (existingDonor[0] === 200) {
-//         if (typeof existingDonor[1] === 'object' && 'donor_id' in existingDonor[1]) {
-//           donorId = (existingDonor[1] as DonorSchema).donor_id;
-//         } else {
-//           res.status(500).json({ message: "Failed to retrieve existing donor information." });
-//           return;
-//         }
-//       } else {
-//         // Add donor to database
-//         const addDonorResult = taskContainer.addDonors([donorRecord]);
-//         if (addDonorResult[0] !== 200) {
-//           res.status(500).json({ message: "Failed to add donors to the database." });
-//           return;
-//         }
-//         donorId = parseInt(addDonorResult[1], 10);
-//       }
-//     }
+      if (existingDonor[0] === 200) {
+        // Donor exists, use the existing donor_id
+        donorId = (existingDonor[1] as DonorSchema).donor_id;
+      } else if (existingDonor[0] === 404) {
+        // Donor does not exist, add to the database
+        const addDonorResult = taskContainer.addDonor(donorRecord);
+        if (addDonorResult[0] !== 200) {
+          res.status(500).json({ message: "Failed to add donor to the database." });
+          return;
+        }
+        donorId = addDonorResult[1];
+      } else {
+        // Handle any unexpected error
+        res.status(500).json({ message: "Unexpected error when checking for existing donor." });
+        return;
+      }
+      
+      if (donorId !== null) {
+        // Collect donor_id for task creation
+        donorIds.push(donorId);
+      }
+    }
 
-//     //   // Step 4: Create tasks for each donor and the event
-//     //   const taskCreationResult = taskContainer.createTasksForEvent(eventId, donorIds);
+    // Step 4: Create tasks for each donor and the event
+    const taskCreationResult = taskContainer.createTasksForEvent(eventId as number, donorIds);
 
-//     //   if (taskCreationResult[0] === 200) {
-//     //     res.status(200).json({
-//     //       message: `Event setup completed with event ID: ${eventId}`,
-//     //       event_id: eventId,
-//     //       tasks_status: taskCreationResult[1],
-//     //     });
-//     //   } else {
-//     //     res.status(500).json({ message: "Failed to create tasks for matched donors." });
-//     //   }
-//     // } catch (error) {
-//     //   console.error("Error in setting up event:", error);
-//     //   res.status(500).json({ message: "Internal Server Error" });
-//     // }
-//   });
+    if (taskCreationResult[0] === 200) {
+      res.status(200).json({
+        message: `Event setup completed with event ID: ${eventId}`,
+        event_id: eventId,
+        tasks_status: taskCreationResult[1],
+      });
+    } else {
+      res.status(500).json({ message: "Failed to create tasks for matched donors." });
+    }
+  } catch (error) {
+    console.error("Error in setting up event:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 
 
 

@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const LoginPage: React.FC = () => {
-  const [userName, setUserName] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log({ userName });
-  };
+    const [userName, setUserName] = useState('');
+    const navigate = useNavigate();
+  
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      console.log({ userName });
+      // After login, navigate to EventScreen
+      navigate('/events');
+    };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">

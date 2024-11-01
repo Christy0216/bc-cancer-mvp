@@ -208,6 +208,23 @@ class SQLiteContainer implements TaskContainerInterface {
     }
 
     /**
+     * Fetches all tasks from the database.
+     * @returns A tuple containing the status code and an array of TaskSchema objects.
+     */
+    public getTasks(): DatabaseResponse<TaskSchema[]> {
+        const sqlQuery = `
+            SELECT * FROM tasks
+        `;
+        try {
+            const rows = this.db.prepare(sqlQuery).all() as TaskSchema[];
+            return [200, rows];
+        } catch (error) {
+            console.error('Error fetching tasks:', (error as Error).message);
+            return [500, `An error occurred: ${(error as Error).message}`];
+        }
+    }
+
+    /**
      * Fetches all tasks for a specific PMM, allowing them to view tasks only for their assigned donors.
      * @param pmm - The PMM responsible for the donors.
      */

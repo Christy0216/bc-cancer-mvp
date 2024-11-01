@@ -120,6 +120,12 @@ app.get("/api/donors", (req: Request, res: Response) => {
   res.status(statusCode).json(result);
 });
 
+// Route to fetch tasks
+app.get("/api/tasks", (req: Request, res: Response) => {
+  const [statusCode, result] = taskContainer.getTasks();
+  res.status(statusCode).json(result);
+});
+
 
 
 export { app };

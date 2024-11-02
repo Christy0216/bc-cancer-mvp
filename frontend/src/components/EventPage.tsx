@@ -137,8 +137,8 @@ const EventPage: React.FC = () => {
               </p>
               <div className="flex space-x-6">
                 {renderChart(event.pending, "Pending", "#fbbf24")}
-                {renderChart(event.approved, "Complete", "#34d399")}
-                {renderChart(event.rejected, "Invited", "#f87171")}
+                {renderChart(event.approved, "Approved", "#34d399")}
+                {renderChart(event.rejected, "Rejected", "#f87171")}
               </div>
             </div>
           ))}

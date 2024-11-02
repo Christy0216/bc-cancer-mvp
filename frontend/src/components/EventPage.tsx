@@ -102,64 +102,63 @@ const EventPage: React.FC = () => {
   };
 
   const renderChart = (data: number, label: string, color: string) => (
-    <Doughnut
-      data={{
-        labels: [label, ""],
-        datasets: [
-          {
-            data: [data, 100 - data],
-            backgroundColor: [color, "#e0e0e0"],
-            borderWidth: 0,
+    <div className="flex flex-col items-center">
+      <Doughnut
+        data={{
+          labels: [label, ""],
+          datasets: [
+            {
+              data: [data, 100 - data],
+              backgroundColor: [color, "#e0e0e0"],
+              borderWidth: 0,
+            },
+          ],
+        }}
+        options={{
+          cutout: "70%",
+          plugins: {
+            tooltip: { enabled: false },
+            legend: { display: false },
           },
-        ],
-      }}
-      options={{
-        cutout: "70%",
-        plugins: {
-          tooltip: { enabled: false },
-          legend: { display: false },
-        },
-        responsive: true,
-        maintainAspectRatio: false,
-      }}
-      className="w-20 h-20"
-    />
+          responsive: true,
+          maintainAspectRatio: false,
+        }}
+        className="w-20 h-20"
+      />
+      <p className="text-sm mt-2 text-gray-600">{label}</p>
+    </div>
   );
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Events</h1>
-      <button
-        onClick={handleCreateEvent}
-        className="bg-blue-500 text-white py-2 px-4 rounded mb-6"
-      >
-        New
-      </button>
-      <div className="space-y-6">
-        {events.map((event) => (
-          <div
-            key={event.event_id}
-            className="border-b pb-4 flex items-start space-x-4"
-          >
-            <div className="flex-grow">
-              <p className="text-lg font-semibold">{event.name}</p>
-            </div>
-            <div className="flex space-x-8">
-              <div className="text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 p-8">
+      <div className="w-full max-w-3xl bg-white rounded-lg shadow-lg p-8">
+        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+          Events
+        </h1>
+        <button
+          onClick={handleCreateEvent}
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg mb-6 transition duration-300 ease-in-out"
+        >
+          New Event
+        </button>
+        <div className="space-y-4">
+          {events.map((event) => (
+            <div
+              key={event.event_id}
+              className="bg-gray-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-between"
+            >
+              <p className="text-xl font-semibold text-gray-700 flex-grow">
+                {event.name}
+              </p>
+              <div className="flex space-x-6 items-center justify-start w-1/2">
+                {/* Enforcing horizontal alignment */}
                 {renderChart(event.pending, "Pending", "#fbbf24")}
-                <p className="text-sm mt-2">Pending</p>
-              </div>
-              <div className="text-center">
                 {renderChart(event.approved, "Complete", "#34d399")}
-                <p className="text-sm mt-2">Complete</p>
-              </div>
-              <div className="text-center">
                 {renderChart(event.rejected, "Invited", "#f87171")}
-                <p className="text-sm mt-2">Invited</p>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

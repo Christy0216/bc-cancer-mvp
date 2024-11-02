@@ -37,7 +37,7 @@ const CreateEventPage: React.FC = () => {
         setEventId(response.data.message);
 
         const donorResponse = await axios.get(`/api/bccancer/search-donors`, {
-          params: { cities: location, limit: 30 },
+          params: { cities: location, limit: 999 },
         });
 
         if (donorResponse.data && donorResponse.data.data) {

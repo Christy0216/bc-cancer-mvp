@@ -54,7 +54,7 @@ app.get("/api/bccancer/cities", async (req: Request, res: Response<CitiesRespons
     const response = await axios.get(apiUrl);
 
     // Format the data to match the frontend's expected structure
-    const formattedCities: City[] = response.data.data.map((cityArray: any[], index: number) => ({
+    const formattedCities: City[] = (response.data as { data: any[] }).data.map((cityArray: any[], index: number) => ({
       id: index,
       name: cityArray[0],
     }));
@@ -589,6 +589,7 @@ app.post('/api/setup-tasks', async (req: Request, res: Response) => {
       res.status(500).json({ message: "Internal Server Error" });
     }
   });
+  
 
 
 export { app };

@@ -28,7 +28,6 @@ const CreateEventPage: React.FC = () => {
 
   const navigate = useNavigate();
 
-  // Fetch city options from the API
   useEffect(() => {
     const fetchCities = async () => {
       try {
@@ -77,7 +76,6 @@ const CreateEventPage: React.FC = () => {
 
           setDonors(formattedDonors);
 
-          // Pre-select all donors
           const allSelected: Set<number> = new Set(
             formattedDonors.map((_: Donor, index: number) => index)
           );
@@ -162,122 +160,113 @@ const CreateEventPage: React.FC = () => {
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Create New Event</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-gray-700">Event Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-2 border rounded"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700">Location</label>
-          <Select
-            value={location}
-            onChange={(selectedOption) => setLocation(selectedOption)}
-            options={cityOptions}
-            isSearchable
-            placeholder="Select a city"
-            className="w-full"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700">Date</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full px-4 py-2 border rounded"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-2 border rounded"
-            rows={3}
-            required
-          />
-        </div>
-        <button
-          type="submit"
-          className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-        >
-          Create Event
-        </button>
-      </form>
-
-      {isEventCreated && (
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Matched Donors</h2>
-          {donors.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-2 border-b font-semibold text-left">
-                      Select
-                    </th>
-                    <th className="px-4 py-2 border-b font-semibold text-left">
-                      First Name
-                    </th>
-                    <th className="px-4 py-2 border-b font-semibold text-left">
-                      Last Name
-                    </th>
-                    <th className="px-4 py-2 border-b font-semibold text-left">
-                      City
-                    </th>
-                    <th className="px-4 py-2 border-b font-semibold text-left">
-                      Total Donations
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {donors.map((donor, index) => (
-                    <tr
-                      key={index}
-                      className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                    >
-                      <td className="px-4 py-2 border">
-                        <input
-                          type="checkbox"
-                          checked={selectedDonors.has(index)}
-                          onChange={() => handleSelectDonor(index)}
-                          className="mr-4"
-                        />
-                      </td>
-                      <td className="px-4 py-2 border">{donor.first_name}</td>
-                      <td className="px-4 py-2 border">{donor.last_name}</td>
-                      <td className="px-4 py-2 border">{donor.city}</td>
-                      <td className="px-4 py-2 border">
-                        {donor.total_donations !== undefined
-                          ? `$${donor.total_donations.toLocaleString()}`
-                          : "N/A"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p>No donors found for the selected location.</p>
-          )}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 p-8">
+      <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-8">
+        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+          Create New Event
+        </h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-gray-700 font-semibold">Event Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 font-semibold">Location</label>
+            <Select
+              value={location}
+              onChange={(selectedOption) => setLocation(selectedOption)}
+              options={cityOptions}
+              isSearchable
+              placeholder="Select a city"
+              className="w-full"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 font-semibold">Date</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 font-semibold">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              rows={4}
+              required
+            />
+          </div>
           <button
-            onClick={handleCreateTasks}
-            className="mt-4 bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+            type="submit"
+            className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300"
           >
-            Create Tasks for Selected Donors
+            Create Event
           </button>
-        </div>
-      )}
+        </form>
+
+        {isEventCreated && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Matched Donors</h2>
+            {donors.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                  <thead>
+                    <tr>
+                      <th className="px-4 py-2 font-semibold text-left border-b">Select</th>
+                      <th className="px-4 py-2 font-semibold text-left border-b">First Name</th>
+                      <th className="px-4 py-2 font-semibold text-left border-b">Last Name</th>
+                      <th className="px-4 py-2 font-semibold text-left border-b">City</th>
+                      <th className="px-4 py-2 font-semibold text-left border-b">Total Donations</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {donors.map((donor, index) => (
+                      <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                        <td className="px-4 py-2 border text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedDonors.has(index)}
+                            onChange={() => handleSelectDonor(index)}
+                            className="form-checkbox h-5 w-5 text-blue-600"
+                          />
+                        </td>
+                        <td className="px-4 py-2 border">{donor.first_name}</td>
+                        <td className="px-4 py-2 border">{donor.last_name}</td>
+                        <td className="px-4 py-2 border">{donor.city}</td>
+                        <td className="px-4 py-2 border">
+                          {donor.total_donations !== undefined
+                            ? `$${donor.total_donations.toLocaleString()}`
+                            : "N/A"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-gray-600">No donors found for the selected location.</p>
+            )}
+            <button
+              onClick={handleCreateTasks}
+              className="w-full mt-4 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition duration-300"
+            >
+              Create Tasks for Selected Donors
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 type Donor = {
   first_name: string;
@@ -17,6 +18,8 @@ const CreateEventPage: React.FC = () => {
   const [isEventCreated, setIsEventCreated] = useState(false);
   const [selectedDonors, setSelectedDonors] = useState<Set<number>>(new Set());
   const [eventId, setEventId] = useState<number | null>(null);
+
+  const navigate = useNavigate(); 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,6 +127,7 @@ const CreateEventPage: React.FC = () => {
       });
       if (response.status === 200) {
         alert("Tasks created successfully for selected donors!");
+        navigate("/events"); // Redirect to the Event Page
       }
     } catch (error) {
       console.error("Error creating tasks:", error);

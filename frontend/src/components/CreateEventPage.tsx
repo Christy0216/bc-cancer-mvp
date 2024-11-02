@@ -21,14 +21,6 @@ const CreateEventPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // test line
-      console.log("Creating event with:", {
-        name,
-        location,
-        date,
-        description,
-      });
-
       const response = await axios.post("/api/event", {
         name,
         location,
@@ -41,17 +33,11 @@ const CreateEventPage: React.FC = () => {
         setIsEventCreated(true);
         setEventId(response.data.message);
 
-        // test line
-        console.log("Fetching donors for location:", location);
-
         const donorResponse = await axios.get(`/api/bccancer/search-donors`, {
           params: { cities: location, limit: 30 },
         });
 
         if (donorResponse.data && donorResponse.data.data) {
-          // test line
-          console.log("Donor response data:", donorResponse.data.data);
-
           const donorsArray = donorResponse.data.data;
           const formattedDonors = donorsArray.map((donor: any[]) => ({
             first_name: donor[5],
@@ -59,10 +45,14 @@ const CreateEventPage: React.FC = () => {
             city: donor[20],
             total_donations: donor[9],
           }));
-          // test line
-          console.log("Formatted donors:", formattedDonors);
 
           setDonors(formattedDonors);
+
+          // Pre-select all donors
+          const allSelected: Set<number> = new Set(
+            formattedDonors.map((_: Donor, index: number) => index)
+          );
+          setSelectedDonors(allSelected);
         } else {
           console.warn("Unexpected data format from API:", donorResponse.data);
           setDonors([]);
@@ -211,8 +201,7 @@ const CreateEventPage: React.FC = () => {
                   />
                   <div>
                     <p>
-                      <strong>Name:</strong> {donor.first_name}{" "}
-                      {donor.last_name}
+                      <strong>Name:</strong> {donor.first_name} {donor.last_name}
                     </p>
                     <p>
                       <strong>City:</strong> {donor.city}

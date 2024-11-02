@@ -61,24 +61,9 @@ const EventPage: React.FC = () => {
           );
           const totalTasks = eventTasks.length;
 
-          const pending =
-            Math.round(
-              (eventTasks.filter((task) => task.status === "pending").length /
-                totalTasks) *
-                100
-            ) || 0;
-          const approved =
-            Math.round(
-              (eventTasks.filter((task) => task.status === "approved").length /
-                totalTasks) *
-                100
-            ) || 0;
-          const rejected =
-            Math.round(
-              (eventTasks.filter((task) => task.status === "rejected").length /
-                totalTasks) *
-                100
-            ) || 0;
+          const pending = Math.round((eventTasks.filter((task) => task.status === "pending").length / totalTasks) * 100) || 0;
+          const approved = Math.round((eventTasks.filter((task) => task.status === "approved").length / totalTasks) * 100) || 0;
+          const rejected = Math.round((eventTasks.filter((task) => task.status === "rejected").length / totalTasks) * 100) || 0;
 
           return {
             ...event,
@@ -121,7 +106,7 @@ const EventPage: React.FC = () => {
             legend: { display: false },
           },
           responsive: true,
-          maintainAspectRatio: false,
+          maintainAspectRatio: true,
         }}
         className="w-20 h-20"
       />
@@ -145,16 +130,15 @@ const EventPage: React.FC = () => {
           {events.map((event) => (
             <div
               key={event.event_id}
-              className="bg-gray-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-between"
+              className="bg-gray-100 rounded-lg p-4 shadow-sm transition-transform duration-200 flex items-center justify-between"
             >
               <p className="text-xl font-semibold text-gray-700 flex-grow">
                 {event.name}
               </p>
-              <div className="flex space-x-6 items-center justify-start w-1/2">
-                {/* Enforcing horizontal alignment */}
+              <div className="flex space-x-6">
                 {renderChart(event.pending, "Pending", "#fbbf24")}
-                {renderChart(event.approved, "Complete", "#34d399")}
-                {renderChart(event.rejected, "Invited", "#f87171")}
+                {renderChart(event.approved, "Approved", "#34d399")}
+                {renderChart(event.rejected, "Rejected", "#f87171")}
               </div>
             </div>
           ))}

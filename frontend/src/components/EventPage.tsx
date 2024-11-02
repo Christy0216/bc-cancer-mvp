@@ -86,6 +86,10 @@ const EventPage: React.FC = () => {
     navigate("/create-event");
   };
 
+  const handleEventClick = (eventId: number) => {
+    navigate(`/event/${eventId}`);
+  };
+
   const renderChart = (data: number, label: string, color: string) => (
     <div className="flex flex-col items-center">
       <Doughnut
@@ -131,6 +135,7 @@ const EventPage: React.FC = () => {
             <div
               key={event.event_id}
               className="bg-gray-100 rounded-lg p-4 shadow-sm transition-transform duration-200 flex items-center justify-between"
+              onClick={() => handleEventClick(event.event_id)}
             >
               <p className="text-xl font-semibold text-gray-700 flex-grow">
                 {event.name}

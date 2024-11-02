@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Select from "react-select";
 
 type Donor = {
   first_name: string;
@@ -9,24 +10,49 @@ type Donor = {
   total_donations?: number;
 };
 
+type CityOption = {
+  value: string;
+  label: string;
+};
+
 const CreateEventPage: React.FC = () => {
   const [name, setName] = useState("");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState<CityOption | null>(null);
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
   const [donors, setDonors] = useState<Donor[]>([]);
   const [isEventCreated, setIsEventCreated] = useState(false);
   const [selectedDonors, setSelectedDonors] = useState<Set<number>>(new Set());
   const [eventId, setEventId] = useState<number | null>(null);
+  const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
 
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+
+  // Fetch city options from the API
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await axios.get("/api/bccancer/cities");
+        const options = response.data.data.map(
+          (city: { id: number; name: string }) => ({
+            value: city.name,
+            label: city.name,
+          })
+        );
+        setCityOptions(options);
+      } catch (error) {
+        console.error("Error fetching city options:", error);
+      }
+    };
+    fetchCities();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const response = await axios.post("/api/event", {
         name,
-        location,
+        location: location?.value,
         date,
         description,
       });
@@ -37,7 +63,7 @@ const CreateEventPage: React.FC = () => {
         setEventId(response.data.message);
 
         const donorResponse = await axios.get(`/api/bccancer/search-donors`, {
-          params: { cities: location, limit: 999 },
+          params: { cities: location?.value, limit: 999 },
         });
 
         if (donorResponse.data && donorResponse.data.data) {
@@ -94,40 +120,40 @@ const CreateEventPage: React.FC = () => {
         matchedDonors: {
           headers: ["first_name", "last_name", "city", "total_donations"],
           data: selectedDonorList.map((donor) => [
-            "PMM Value", // PMM placeholder; replace with actual if available
-            "", // SMM placeholder; replace if available
-            "", // VMM placeholder; replace if available
-            "no", // exclude placeholder
-            "no", // deceased placeholder
+            "PMM Value",
+            "",
+            "",
+            "no",
+            "no",
             donor.first_name,
-            "", // nickname placeholder
+            "",
             donor.last_name,
-            "", // organization placeholder
+            "",
             donor.total_donations ?? 0,
-            0, // total pledge placeholder
-            0, // largest gift placeholder
-            "", // appeal placeholder
-            0, // first gift date placeholder
-            0, // last gift date placeholder
-            0, // last gift amount placeholder
-            0, // last gift request placeholder
-            "", // last gift appeal placeholder
-            "", // address_line1 placeholder
-            "", // address_line2 placeholder
+            0,
+            0,
+            "",
+            0,
+            0,
+            0,
+            0,
+            "",
+            "",
+            "",
             donor.city,
-            "", // phone type placeholder
-            "", // phone restrictions placeholder
-            "", // email restrictions placeholder
-            "", // communication restrictions placeholder
-            "", // events in person placeholder
-            "", // events magazine placeholder
-            "", // communication preference placeholder
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
           ]),
         },
       });
       if (response.status === 200) {
         alert("Tasks created successfully for selected donors!");
-        navigate("/events"); // Redirect to the Event Page
+        navigate("/events");
       }
     } catch (error) {
       console.error("Error creating tasks:", error);
@@ -151,11 +177,13 @@ const CreateEventPage: React.FC = () => {
         </div>
         <div>
           <label className="block text-gray-700">Location</label>
-          <input
-            type="text"
+          <Select
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="w-full px-4 py-2 border rounded"
+            onChange={(selectedOption) => setLocation(selectedOption)}
+            options={cityOptions}
+            isSearchable
+            placeholder="Select a city"
+            className="w-full"
             required
           />
         </div>
@@ -191,35 +219,54 @@ const CreateEventPage: React.FC = () => {
         <div className="mt-8">
           <h2 className="text-xl font-bold mb-4">Matched Donors</h2>
           {donors.length > 0 ? (
-            <ul className="space-y-4">
-              {donors.map((donor, index) => (
-                <li
-                  key={index}
-                  className="border p-4 rounded flex items-center"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedDonors.has(index)}
-                    onChange={() => handleSelectDonor(index)}
-                    className="mr-4"
-                  />
-                  <div>
-                    <p>
-                      <strong>Name:</strong> {donor.first_name} {donor.last_name}
-                    </p>
-                    <p>
-                      <strong>City:</strong> {donor.city}
-                    </p>
-                    <p>
-                      <strong>Total Donations:</strong> $
-                      {donor.total_donations !== undefined
-                        ? donor.total_donations.toLocaleString()
-                        : "N/A"}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white border border-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-2 border-b font-semibold text-left">
+                      Select
+                    </th>
+                    <th className="px-4 py-2 border-b font-semibold text-left">
+                      First Name
+                    </th>
+                    <th className="px-4 py-2 border-b font-semibold text-left">
+                      Last Name
+                    </th>
+                    <th className="px-4 py-2 border-b font-semibold text-left">
+                      City
+                    </th>
+                    <th className="px-4 py-2 border-b font-semibold text-left">
+                      Total Donations
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {donors.map((donor, index) => (
+                    <tr
+                      key={index}
+                      className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                    >
+                      <td className="px-4 py-2 border">
+                        <input
+                          type="checkbox"
+                          checked={selectedDonors.has(index)}
+                          onChange={() => handleSelectDonor(index)}
+                          className="mr-4"
+                        />
+                      </td>
+                      <td className="px-4 py-2 border">{donor.first_name}</td>
+                      <td className="px-4 py-2 border">{donor.last_name}</td>
+                      <td className="px-4 py-2 border">{donor.city}</td>
+                      <td className="px-4 py-2 border">
+                        {donor.total_donations !== undefined
+                          ? `$${donor.total_donations.toLocaleString()}`
+                          : "N/A"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p>No donors found for the selected location.</p>
           )}

@@ -2,6 +2,12 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
+import {
+  FaAngleDoubleLeft,
+  FaAngleLeft,
+  FaAngleRight,
+  FaAngleDoubleRight,
+} from "react-icons/fa";
 
 type Donor = {
   first_name: string;
@@ -25,6 +31,9 @@ const CreateEventPage: React.FC = () => {
   const [selectedDonors, setSelectedDonors] = useState<Set<number>>(new Set());
   const [eventId, setEventId] = useState<number | null>(null);
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [donorsPerPage] = useState(10);
+  const [jumpToPage, setJumpToPage] = useState(currentPage.toString());
 
   const navigate = useNavigate();
 
@@ -60,34 +69,35 @@ const CreateEventPage: React.FC = () => {
         alert("Event created successfully");
         setIsEventCreated(true);
         setEventId(response.data.message);
-
-        const donorResponse = await axios.get(`/api/bccancer/search-donors`, {
-          params: { cities: location?.value, limit: 999 },
-        });
-
-        if (donorResponse.data && donorResponse.data.data) {
-          const donorsArray = donorResponse.data.data;
-          const formattedDonors = donorsArray.map((donor: any[]) => ({
-            first_name: donor[5],
-            last_name: donor[7],
-            city: donor[20],
-            total_donations: donor[9],
-          }));
-
-          setDonors(formattedDonors);
-
-          const allSelected: Set<number> = new Set(
-            formattedDonors.map((_: Donor, index: number) => index)
-          );
-          setSelectedDonors(allSelected);
-        } else {
-          console.warn("Unexpected data format from API:", donorResponse.data);
-          setDonors([]);
-        }
+        fetchDonors();
       }
     } catch (error) {
-      console.error("Error creating event or fetching donors:", error);
-      alert("Failed to create event or fetch donors");
+      console.error("Error creating event:", error);
+      alert("Failed to create event");
+    }
+  };
+
+  const fetchDonors = async () => {
+    try {
+      const response = await axios.get(`/api/bccancer/search-donors`, {
+        params: { cities: location?.value, limit: 999 },
+      });
+
+      if (response.data && response.data.data) {
+        const donorsArray = response.data.data;
+        const formattedDonors = donorsArray.map((donor: any[]) => ({
+          first_name: donor[5],
+          last_name: donor[7],
+          city: donor[20],
+          total_donations: donor[9],
+        }));
+        setDonors(formattedDonors);
+      } else {
+        console.warn("Unexpected data format from API:", response.data);
+        setDonors([]);
+      }
+    } catch (error) {
+      console.error("Error fetching donors:", error);
     }
   };
 
@@ -109,9 +119,12 @@ const CreateEventPage: React.FC = () => {
       return;
     }
 
-    const selectedDonorList = donors.filter((_, index) =>
-      selectedDonors.has(index)
-    );
+    const selectedDonorList = donors
+      .slice((currentPage - 1) * donorsPerPage, currentPage * donorsPerPage)
+      .filter((_, index) =>
+        selectedDonors.has((currentPage - 1) * donorsPerPage + index)
+      );
+
     try {
       const response = await axios.post("/api/setup-tasks", {
         eventId,
@@ -159,6 +172,57 @@ const CreateEventPage: React.FC = () => {
     }
   };
 
+  const totalPages = Math.ceil(donors.length / donorsPerPage);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
+  const handleJumpToPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const page = parseInt(e.target.value, 10);
+    if (page >= 1 && page <= totalPages) {
+      setJumpToPage(e.target.value);
+    } else if (!e.target.value) {
+      setJumpToPage("");
+    }
+  };
+
+  const jumpToPageSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const page = parseInt(jumpToPage, 10);
+    if (page >= 1 && page <= totalPages) {
+      handlePageChange(page);
+    }
+  };
+
+  const handleFirstPage = () => handlePageChange(1);
+  const handleLastPage = () => handlePageChange(totalPages);
+  const handleNextPage = () => handlePageChange(currentPage + 1);
+  const handlePreviousPage = () => handlePageChange(currentPage - 1);
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 6) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, '...');
+        pages.push(totalPages);
+      } else if (currentPage > totalPages - 4) {
+        pages.push(1, '...');
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 p-8">
       <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-8">
@@ -167,7 +231,9 @@ const CreateEventPage: React.FC = () => {
         </h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-gray-700 font-semibold">Event Name</label>
+            <label className="block text-gray-700 font-semibold">
+              Event Name
+            </label>
             <input
               type="text"
               value={name}
@@ -177,7 +243,9 @@ const CreateEventPage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-700 font-semibold">Location</label>
+            <label className="block text-gray-700 font-semibold">
+              Location
+            </label>
             <Select
               value={location}
               onChange={(selectedOption) => setLocation(selectedOption)}
@@ -199,7 +267,9 @@ const CreateEventPage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-700 font-semibold">Description</label>
+            <label className="block text-gray-700 font-semibold">
+              Description
+            </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -218,45 +288,144 @@ const CreateEventPage: React.FC = () => {
 
         {isEventCreated && (
           <div className="mt-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Matched Donors</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+              Matched Donors
+            </h2>
             {donors.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full bg-white border border-gray-200 rounded-lg">
                   <thead>
                     <tr>
-                      <th className="px-4 py-2 font-semibold text-left border-b">Select</th>
-                      <th className="px-4 py-2 font-semibold text-left border-b">First Name</th>
-                      <th className="px-4 py-2 font-semibold text-left border-b">Last Name</th>
-                      <th className="px-4 py-2 font-semibold text-left border-b">City</th>
-                      <th className="px-4 py-2 font-semibold text-left border-b">Total Donations</th>
+                      <th className="px-4 py-2 font-semibold text-left border-b">
+                        Select
+                      </th>
+                      <th className="px-4 py-2 font-semibold text-left border-b">
+                        First Name
+                      </th>
+                      <th className="px-4 py-2 font-semibold text-left border-b">
+                        Last Name
+                      </th>
+                      <th className="px-4 py-2 font-semibold text-left border-b">
+                        City
+                      </th>
+                      <th className="px-4 py-2 font-semibold text-left border-b">
+                        Total Donations
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {donors.map((donor, index) => (
-                      <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                        <td className="px-4 py-2 border text-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedDonors.has(index)}
-                            onChange={() => handleSelectDonor(index)}
-                            className="form-checkbox h-5 w-5 text-blue-600"
-                          />
-                        </td>
-                        <td className="px-4 py-2 border">{donor.first_name}</td>
-                        <td className="px-4 py-2 border">{donor.last_name}</td>
-                        <td className="px-4 py-2 border">{donor.city}</td>
-                        <td className="px-4 py-2 border">
-                          {donor.total_donations !== undefined
-                            ? `$${donor.total_donations.toLocaleString()}`
-                            : "N/A"}
-                        </td>
-                      </tr>
-                    ))}
+                    {donors
+                      .slice(
+                        (currentPage - 1) * donorsPerPage,
+                        currentPage * donorsPerPage
+                      )
+                      .map((donor, index) => (
+                        <tr
+                          key={index}
+                          className={
+                            index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                          }
+                        >
+                          <td className="px-4 py-2 border text-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedDonors.has(
+                                (currentPage - 1) * donorsPerPage + index
+                              )}
+                              onChange={() =>
+                                handleSelectDonor(
+                                  (currentPage - 1) * donorsPerPage + index
+                                )
+                              }
+                              className="form-checkbox h-5 w-5 text-blue-600"
+                            />
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {donor.first_name}
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {donor.last_name}
+                          </td>
+                          <td className="px-4 py-2 border">{donor.city}</td>
+                          <td className="px-4 py-2 border">
+                            {donor.total_donations !== undefined
+                              ? `$${donor.total_donations.toLocaleString()}`
+                              : "N/A"}
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
+                <div className="flex justify-center items-center mt-4 space-x-2">
+                  <button
+                    onClick={handleFirstPage}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-full border border-gray-300 hover:bg-gray-100"
+                  >
+                    <FaAngleDoubleLeft />
+                  </button>
+                  <button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-full border border-gray-300 hover:bg-gray-100"
+                  >
+                    <FaAngleLeft />
+                  </button>
+                  {getPageNumbers().map((page, index) => (
+                    <button
+                      key={index}
+                      onClick={() =>
+                        typeof page === "number" && handlePageChange(page)
+                      }
+                      className={`${
+                        currentPage === page
+                          ? "bg-blue-500 text-white"
+                          : "border border-gray-300"
+                      } px-3 py-1 rounded-full mx-1 hover:bg-gray-100`}
+                      disabled={page === "..."}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-full border border-gray-300 hover:bg-gray-100"
+                  >
+                    <FaAngleRight />
+                  </button>
+                  <button
+                    onClick={handleLastPage}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-full border border-gray-300 hover:bg-gray-100"
+                  >
+                    <FaAngleDoubleRight />
+                  </button>
+                  <form
+                    onSubmit={jumpToPageSubmit}
+                    className="flex items-center ml-4"
+                  >
+                    <input
+                      type="number"
+                      value={jumpToPage}
+                      onChange={handleJumpToPageChange}
+                      className="w-14 px-2 py-1 text-center border rounded-lg"
+                      min="1"
+                      max={totalPages.toString()}
+                    />
+                    <button type="submit" className="ml-2 text-blue-600">
+                      Go
+                    </button>
+                  </form>
+                </div>
+                <div className="text-center mt-2 text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </div>
               </div>
             ) : (
-              <p className="text-gray-600">No donors found for the selected location.</p>
+              <p className="text-gray-600">
+                No donors found for the selected location.
+              </p>
             )}
             <button
               onClick={handleCreateTasks}

@@ -43,7 +43,8 @@ class SQLiteContainer implements TaskContainerInterface {
                 name TEXT NOT NULL,
                 location TEXT,
                 date TEXT,
-                description TEXT
+                description TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
         `);
         console.log('Events table created or already exist.');
@@ -58,7 +59,8 @@ class SQLiteContainer implements TaskContainerInterface {
                 pmm TEXT NOT NULL,
                 organization_name TEXT,
                 city TEXT,
-                total_donations INTEGER
+                total_donations INTEGER,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
         `);
         console.log('Donors table created or already exist.');
@@ -71,11 +73,15 @@ class SQLiteContainer implements TaskContainerInterface {
                 donor_id INTEGER,
                 status TEXT CHECK(status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
                 reason TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (event_id) REFERENCES events(event_id),
                 FOREIGN KEY (donor_id) REFERENCES donors(donor_id)
             );
         `);
         console.log('Tasks table created or already exist.');
+
+        const result = this.db.prepare('PRAGMA table_info(events);').all();
+        console.log(result);
     }
 
     /**
@@ -100,7 +106,7 @@ class SQLiteContainer implements TaskContainerInterface {
      * @param event - The event object containing event details.
      * @returns A tuple containing the status code and a message.
      */
-    public addEvent(event: Omit<EventSchema, 'event_id'>): DatabaseResponse<number> {
+    public addEvent(event: Omit<EventSchema, 'event_id'|'created_at'>): DatabaseResponse<number> {
         const sqlQuery = `
             INSERT INTO events (name, location, date, description)
             VALUES (?, ?, ?, ?)
@@ -161,7 +167,7 @@ class SQLiteContainer implements TaskContainerInterface {
      * @param donor - The donor object.
      * @returns the donor_id of the newly added donor.
      */
-    public addDonor(donor: Omit<DonorSchema, 'donor_id'>): [number, number] {
+    public addDonor(donor: Omit<DonorSchema, 'donor_id'|'created_at'>): [number, number] {
         const sqlQuery = `
         INSERT INTO donors (first_name, nick_name, last_name, pmm, organization_name, city, total_donations)
         VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -190,14 +196,14 @@ class SQLiteContainer implements TaskContainerInterface {
      * @param donors - An array of donor objects.
      * @returns A tuple containing the status code and a message.
      */
-    public addDonors(donors: Omit<DonorSchema, 'donor_id'>[]): [number, string] {
+    public addDonors(donors: Omit<DonorSchema, 'donor_id'|'created_at'>[]): [number, string] {
         const sqlQuery = `
         INSERT INTO donors (first_name, nick_name, last_name, pmm, organization_name, city, total_donations)
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
         try {
             const insertDonor = this.db.prepare(sqlQuery);
-            const transaction = this.db.transaction((donorList: Omit<DonorSchema, 'donor_id'>[]) => {
+            const transaction = this.db.transaction((donorList: Omit<DonorSchema, 'donor_id'|'created_at'>[]) => {
                 donorList.forEach(donor => {
                     insertDonor.run(
                         donor.first_name,
@@ -316,6 +322,10 @@ class SQLiteContainer implements TaskContainerInterface {
             return [500, `An error occurred: ${(error as Error).message}`];
         }
     }
+
+    
 }
+
+
 
 export default SQLiteContainer;

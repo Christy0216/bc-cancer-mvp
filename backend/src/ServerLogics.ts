@@ -332,7 +332,7 @@ app.post("/api/setup-event", async (req: Request, res: Response): Promise<void> 
 
     // Step 3: Prepare donor records for insertion
     const donorIds: number[] = [];
-    const donorRecords: Omit<DonorSchema, "donor_id">[] = matchedDonors.data.map((donor: any) => ({
+    const donorRecords: Omit<DonorSchema, "donor_id"|'created_at'>[] = matchedDonors.data.map((donor: any) => ({
       first_name: donor[5] as string,
       nick_name: donor[6] as string,
       last_name: donor[7] as string,

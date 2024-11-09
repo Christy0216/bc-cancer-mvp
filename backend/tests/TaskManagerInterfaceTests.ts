@@ -50,7 +50,7 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
 
         test('should add donors successfully', () => {
             const donorManager = createTaskManager();
-            const donors: Omit<DonorSchema, 'donor_id'>[] = [
+            const donors: Omit<DonorSchema, 'donor_id'|'created_at'>[] = [
                 { first_name: 'Carlos', nick_name: 'Charlie', last_name: 'Smith', pmm: 'PMM123', organization_name: 'Helping Hands Inc.', city: 'Los Angeles', total_donations: 5000 },
                 { first_name: 'Maria', nick_name: 'Mia', last_name: 'Johnson', pmm: 'PMM456', organization_name: 'Bright Future Foundation', city: 'San Francisco', total_donations: 7500 }
             ];
@@ -69,7 +69,7 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
             };
             const [eventCode, eventId] = taskManager.addEvent(event);
 
-            const donors: Omit<DonorSchema, 'donor_id'>[] = [
+            const donors: Omit<DonorSchema, 'donor_id'|'created_at'>[] = [
                 { first_name: 'John', nick_name: '', last_name: 'Doe', pmm: 'PMM1', organization_name: 'Org1', city: 'Chicago', total_donations: 100 },
                 { first_name: 'Jane', nick_name: '', last_name: 'Smith', pmm: 'PMM2', organization_name: 'Org2', city: 'New York', total_donations: 150 }
             ];
@@ -91,7 +91,7 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
             const event = { name: 'Gala Event', location: 'NY', date: '2024-11-25', description: 'Charity event' };
             const [eventCode, eventId] = taskManager.addEvent(event);
 
-            const donors: Omit<DonorSchema, 'donor_id'>[] = [{ first_name: 'Alice', nick_name: '', last_name: 'Green', pmm: 'PMM100', organization_name: 'Charity Org', city: 'LA', total_donations: 1000 }];
+            const donors: Omit<DonorSchema, 'donor_id'|'created_at'>[] = [{ first_name: 'Alice', nick_name: '', last_name: 'Green', pmm: 'PMM100', organization_name: 'Charity Org', city: 'LA', total_donations: 1000 }];
             taskManager.addDonors(donors);
             const donorIds = donors.map((_, index) => index + 1);
             taskManager.createTasksForEvent(eventId as number, donorIds);
@@ -113,7 +113,7 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
             const event = { name: 'Donor Event', location: 'SF', date: '2024-12-01', description: 'Donation drive' };
             const [eventCode, eventId] = taskManager.addEvent(event);
 
-            const donors: Omit<DonorSchema, 'donor_id'>[] = [
+            const donors: Omit<DonorSchema, 'donor_id'|'created_at'>[] = [
                 { first_name: 'Bob', nick_name: '', last_name: 'Brown', pmm: 'PMM100', organization_name: 'Org1', city: 'LA', total_donations: 500 },
                 { first_name: 'Sue', nick_name: '', last_name: 'Smith', pmm: 'PMM100', organization_name: 'Org2', city: 'SF', total_donations: 700 },
             ];
@@ -142,7 +142,7 @@ export const runTaskManagerTests = (createTaskManager: () => TaskContainerInterf
             const event = { name: 'End of Year Event', location: 'Boston', date: '2024-12-15', description: 'Annual fundraiser' };
             const [eventCode, eventId] = taskManager.addEvent(event);
 
-            const donors: Omit<DonorSchema, 'donor_id'>[] = [
+            const donors: Omit<DonorSchema, 'donor_id'|'created_at'>[] = [
                 { first_name: 'Tom', nick_name: '', last_name: 'White', pmm: 'PMM200', organization_name: 'OrgA', city: 'Boston', total_donations: 600 },
                 { first_name: 'Jerry', nick_name: '', last_name: 'Mouse', pmm: 'PMM200', organization_name: 'OrgB', city: 'NY', total_donations: 800 },
             ];

@@ -32,6 +32,7 @@ export interface EventSchema {
   location: string;
   date: string;
   description: string;
+  created_at: string;
 }
 
 // Represents the structure of a donor in the database
@@ -44,6 +45,7 @@ export interface DonorSchema {
   organization_name: string;
   city: string;
   total_donations: number;
+  created_at: string;
 }
 
 // Represents the structure of a task in the database
@@ -53,6 +55,7 @@ export interface TaskSchema {
   donor_id: number;
   status: 'pending' | 'approved' | 'rejected'; // Define status options here for consistency
   reason: string | null;
+  created_at: string;
 }
 
 // Defines the result type of common database operations
@@ -61,10 +64,10 @@ export type DatabaseResponse<T> = [number, T | string];
 // Defines the main interface for the SQLiteContainer class methods
 export interface TaskContainerInterface {
   getEvents(): DatabaseResponse<EventSchema[]>;
-  addEvent(event: Omit<EventSchema, 'event_id'>): DatabaseResponse<number>;
+  addEvent(event: Omit<EventSchema, 'event_id' | 'created_at'>): DatabaseResponse<number>;
   getDonors(): DatabaseResponse<DonorSchema[]>;
   findDonorByName(firstName: string, lastName: string): DatabaseResponse<DonorSchema>;
-  addDonors(donors: Omit<DonorSchema, 'donor_id'>[]): DatabaseResponse<string>;
+  addDonors(donors: Omit<DonorSchema, 'donor_id' | 'created_at'>[]): DatabaseResponse<string>;
   createTasksForEvent(eventId: number, donorIds: number[]): DatabaseResponse<string>;
   updateTaskStatus(taskId: number, status: 'approved' | 'rejected', reason?: string): DatabaseResponse<string>;
   getTasks(): DatabaseResponse<TaskSchema[]>;

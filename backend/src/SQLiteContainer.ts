@@ -322,8 +322,6 @@ class SQLiteContainer implements TaskContainerInterface {
             return [500, `An error occurred: ${(error as Error).message}`];
         }
     }
-
-    
 }
 
 

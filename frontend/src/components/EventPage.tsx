@@ -54,7 +54,7 @@ const EventPage: React.FC = () => {
 
         const taskResponse = await axios.get<Task[]>("/api/tasks");
         const tasks = taskResponse.data;
-
+        console.log(taskResponse);
         const eventsWithStatus = events.map((event) => {
           const eventTasks = tasks.filter(
             (task) => task.event_id === event.event_id

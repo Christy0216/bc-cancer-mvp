@@ -428,6 +428,7 @@ const CreateEventPage: React.FC = () => {
               </p>
             )}
             <button
+              disabled={selectedDonors.size === 0}
               onClick={handleCreateTasks}
               className="w-full mt-4 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition duration-300"
             >

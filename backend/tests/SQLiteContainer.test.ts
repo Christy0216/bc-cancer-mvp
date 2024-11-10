@@ -135,7 +135,7 @@ describe('Donor Management Tests', () => {
         // Initialize the SQLite container and ensure tables are created
         const donorManager = new SQLiteContainer('test_db_donor_verification');
 
-        const donors: Omit<DonorSchema, 'donor_id'>[] = [
+        const donors: Omit<DonorSchema, 'donor_id'|'created_at'>[] = [
             {
                 first_name: 'Carlos',
                 nick_name: 'Charlie',
@@ -191,7 +191,7 @@ describe('Donor Management Tests', () => {
     test('should return 500 error when database fails during addDonors', () => {
         const donorManager = new SQLiteContainer('test_db_donor_failure');
 
-        const donors: Omit<DonorSchema, 'donor_id'>[] = [
+        const donors: Omit<DonorSchema, 'donor_id'|'created_at'>[] = [
             {
                 first_name: 'John',
                 nick_name: 'Johnny',
@@ -234,7 +234,7 @@ describe('Task Creation Tests', () => {
         expect(eventId).toBeDefined();
     
         // Define and add sample donors
-        const donors: Omit<DonorSchema, 'donor_id'>[] = [
+        const donors: Omit<DonorSchema, 'donor_id'|'created_at'>[] = [
             {first_name: 'John', nick_name: '', last_name: 'Doe', pmm: 'PMM1', organization_name: 'Org1', city: 'Chicago', total_donations: 100 },
             {first_name: 'Jane', nick_name: '', last_name: 'Smith', pmm: 'PMM2', organization_name: 'Org2', city: 'New York', total_donations: 150 }
         ];
@@ -288,8 +288,8 @@ describe('Task Status Update Tests', () => {
         expect(eventCode).toBe(200);
 
         // Add a sample donor
-        const donors: DonorSchema[] = [
-            { donor_id: 0, first_name: 'Alice', nick_name: '', last_name: 'Green', pmm: 'PMM100', organization_name: 'Charity Works', city: 'Los Angeles', total_donations: 200 }
+        const donors: Omit<DonorSchema, 'created_at'>[] = [
+            { donor_id: 0, first_name: 'Alice', nick_name: '', last_name: 'Green', pmm: 'PMM100', organization_name: 'Charity Works', city: 'Los Angeles', total_donations: 200}
         ];
         const [donorCode, donorMessage] = taskManager.addDonors(donors);
         expect(donorCode).toBe(200);
@@ -337,7 +337,7 @@ describe('Task Status Update Tests', () => {
         expect(eventCode).toBe(200);
 
         // Add a sample donor
-        const donors: DonorSchema[] = [
+        const donors: Omit<DonorSchema, 'created_at'>[] = [
             { donor_id: 0, first_name: 'Bob', nick_name: '', last_name: 'Brown', pmm: 'PMM101', organization_name: 'Hope Foundation', city: 'Seattle', total_donations: 300 }
         ];
         const [donorCode, donorMessage] = taskManager.addDonors(donors);
@@ -390,7 +390,7 @@ describe('Task Retrieval by PMM Tests', () => {
         expect(eventCode).toBe(200);
 
         // Define and add sample donors with different PMMs
-        const donors: DonorSchema[] = [
+        const donors:  Omit<DonorSchema, 'created_at'>[] = [
             { donor_id: 0, first_name: 'Alice', nick_name: '', last_name: 'Johnson', pmm: 'PMM100', organization_name: 'CharityOrg A', city: 'Denver', total_donations: 500 },
             { donor_id: 0, first_name: 'Bob', nick_name: '', last_name: 'Smith', pmm: 'PMM100', organization_name: 'CharityOrg B', city: 'Denver', total_donations: 300 },
             { donor_id: 0, first_name: 'Charlie', nick_name: '', last_name: 'Brown', pmm: 'PMM200', organization_name: 'CharityOrg C', city: 'Denver', total_donations: 400 }
@@ -455,7 +455,7 @@ describe('Task Retrieval by Event Tests', () => {
         expect(eventCode).toBe(200);
 
         // Define and add sample donors
-        const donors: Omit<DonorSchema, 'donor_id'>[] = [
+        const donors: Omit<DonorSchema, 'donor_id'|'created_at'>[] = [
             { first_name: 'Daisy', nick_name: '', last_name: 'Miller', pmm: 'PMM300', organization_name: 'Helping Hands', city: 'San Francisco', total_donations: 200 },
             { first_name: 'Jack', nick_name: '', last_name: 'Johnson', pmm: 'PMM300', organization_name: 'Care Foundation', city: 'San Francisco', total_donations: 350 }
         ];

@@ -86,7 +86,7 @@ const EventDetailPage: React.FC = () => {
   useEffect(() => {
     const fetchTasksByEvent = async () => {
       try {
-        const tasksAndDonorsResponse = await axios.get<TaskAndDonor[]>(`/api/tasksAndDonors/${eventId}`);
+        const tasksAndDonorsResponse = await axios.get<TaskAndDonor[]>(`/api/tasks/${eventId}`);
         console.log(tasksAndDonorsResponse);
         if (tasksAndDonorsResponse.data != null) {
          const tasksAndDonorsArray = tasksAndDonorsResponse.data;

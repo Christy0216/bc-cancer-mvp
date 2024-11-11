@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
-import { EventSchema, DonorSchema, TaskSchema, DatabaseResponse, TaskContainerInterface, TasksAndDonorsResponse } from './Types';
+import { EventSchema, DonorSchema, TaskSchema, DatabaseResponse, TaskContainerInterface} from './Types';
 
 /**
  * Class representing a SQLite container for managing events, donors, and tasks.
@@ -307,9 +307,23 @@ class SQLiteContainer implements TaskContainerInterface {
      */
     public getTasksByPMM(pmm: string): DatabaseResponse<TaskSchema[]> {
         const sqlQuery = `
-            SELECT t.* FROM tasks t
-            JOIN donors d ON t.donor_id = d.donor_id
-            WHERE d.pmm = ?
+            SELECT 
+                tasks.task_id,
+                tasks.event_id,
+                tasks.donor_id,
+                tasks.status,
+                tasks.reason,
+                tasks.created_at,
+                donors.first_name,
+                donors.nick_name,
+                donors.last_name,
+                donors.pmm,
+                donors.organization_name,
+                donors.city,
+                donors.total_donations
+            FROM tasks
+            JOIN donors ON tasks.donor_id = donors.donor_id
+            WHERE donors.pmm = ?
         `;
         try {
             const rows = this.db.prepare(sqlQuery).all(pmm) as TaskSchema[];
@@ -326,8 +340,23 @@ class SQLiteContainer implements TaskContainerInterface {
      */
     public getTasksByEvent(eventId: number): DatabaseResponse<TaskSchema[]> {
         const sqlQuery = `
-            SELECT * FROM tasks
-            WHERE event_id = ?
+            SELECT 
+                tasks.task_id,
+                tasks.event_id,
+                tasks.donor_id,
+                tasks.status,
+                tasks.reason,
+                tasks.created_at,
+                donors.first_name,
+                donors.nick_name,
+                donors.last_name,
+                donors.pmm,
+                donors.organization_name,
+                donors.city,
+                donors.total_donations
+            FROM tasks
+            JOIN donors ON tasks.donor_id = donors.donor_id
+            WHERE tasks.event_id = ?
         `;
         try {
             const rows = this.db.prepare(sqlQuery).all(eventId) as TaskSchema[];
@@ -337,14 +366,28 @@ class SQLiteContainer implements TaskContainerInterface {
             return [500, `An error occurred: ${(error as Error).message}`];
         }
     }
-    public getTasksAndDonorsByEvent(eventId: number): DatabaseResponse<TasksAndDonorsResponse[]> {
+    public getTasksAndDonorsByEvent(eventId: number): DatabaseResponse<TaskSchema[]> {
         const sqlQuery = `
-            SELECT * FROM tasks t
-      JOIN donors d ON t.donor_id = d.donor_id
-            WHERE event_id = ?
+            SELECT 
+                tasks.task_id,
+                tasks.event_id,
+                tasks.donor_id,
+                tasks.status,
+                tasks.reason,
+                tasks.created_at,
+                donors.first_name,
+                donors.nick_name,
+                donors.last_name,
+                donors.pmm,
+                donors.organization_name,
+                donors.city,
+                donors.total_donations
+            FROM tasks
+            JOIN donors ON tasks.donor_id = donors.donor_id
+            WHERE tasks.event_id = ?
         `;
         try {
-            const rows = this.db.prepare(sqlQuery).all(eventId) as TasksAndDonorsResponse[];
+            const rows = this.db.prepare(sqlQuery).all(eventId) as TaskSchema[];
             return [200, rows];
         } catch (error) {
             console.error('Error fetching tasks for event:', (error as Error).message);

@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import axios from "axios";
 import SQLiteContainer from "./SQLiteContainer";
-import { DonorsResponse, City, CitiesResponse, EventResponse, ErrorResponse, DonorSchema, EventSchema, TaskSchema, TaskContainerInterface, TasksResponse, TasksAndDonorsResponse } from "./Types";
+import { DonorsResponse, City, CitiesResponse, EventResponse, ErrorResponse, DonorSchema, EventSchema, TaskSchema, TaskContainerInterface, TasksResponse } from "./Types";
 
 /** Server **/
 
@@ -590,23 +590,11 @@ app.post('/api/setup-tasks', async (req: Request, res: Response) => {
     }
   });
   
-app.get("/api/tasks/:eventId", (req: Request, res: Response<TasksResponse | ErrorResponse>)=> {
+app.get("/api/tasks/:eventId", (req: Request, res: Response<TaskSchema[] | ErrorResponse>)=> {
   try {
     const eventId = parseInt(req.params.eventId);
     const tasks = taskContainer.getTasksByEvent(eventId);
     const tasksArray = tasks[1] as TaskSchema[];
-    res.status(200).json({ data: tasksArray });
-  } catch (error) {
-    console.error("Error fetching tasks:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-app.get("/api/tasksAndDonors/:eventId", (req: Request, res: Response<TasksAndDonorsResponse[] | ErrorResponse>)=> {
-  try {
-    const eventId = parseInt(req.params.eventId);
-    const tasks = taskContainer.getTasksAndDonorsByEvent(eventId);
-    const tasksArray = tasks[1] as TasksAndDonorsResponse[];
     res.status(200).json(tasksArray);
   } catch (error) {
     console.error("Error fetching tasks:", error);

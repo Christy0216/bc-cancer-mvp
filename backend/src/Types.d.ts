@@ -1,20 +1,4 @@
-export interface TasksAndDonorsResponse {
-  task_id: number;
-  event_id: number;
-  donor_id: number;
-  status: 'pending' | 'approved' | 'rejected'; // Define status options here for consistency
-  reason: string | null;
-  created_at: string;
-  donor_id: number;
-  first_name: string;
-  nick_name: string;
-  last_name: string;
-  pmm: string; // The Project Manager responsible for this donor
-  organization_name: string;
-  city: string;
-  total_donations: number;
-  created_at: string;
-}
+
 
 export interface DonorsResponse {
   headers: string[];
@@ -78,6 +62,13 @@ export interface TaskSchema {
   status: 'pending' | 'approved' | 'rejected'; // Define status options here for consistency
   reason: string | null;
   created_at: string;
+  first_name: string;
+  nick_name: string;
+  last_name: string;
+  pmm: string; // The Project Manager responsible for this donor
+  organization_name: string;
+  city: string;
+  total_donations: number;
 }
 
 // Defines the result type of common database operations

@@ -589,11 +589,74 @@ app.post('/api/setup-tasks', async (req: Request, res: Response) => {
       res.status(500).json({ message: "Internal Server Error" });
     }
   });
-  
+
+/**
+ * GET /api/tasks/:eventId
+ * Fetches tasks for a specific event.
+ * @param req.params.eventId - The ID of the event.
+ * @returns A list of tasks or an error response.
+ * 
+ * Sample output:
+ * [
+ *   {
+ *     "task_id": 2,
+ *     "event_id": 1,
+ *     "donor_id": 2,
+ *     "status": "pending",
+ *     "reason": null,
+ *     "created_at": "2024-11-09 22:02:44",
+ *     "first_name": "Ahmed",
+ *     "nick_name": "",
+ *     "last_name": "Cohen",
+ *     "pmm": "PMM Value",
+ *     "organization_name": "",
+ *     "city": "Richmond",
+ *     "total_donations": 0
+ *   }
+ * ]
+ */
 app.get("/api/tasks/:eventId", (req: Request, res: Response<TaskSchema[] | ErrorResponse>)=> {
   try {
     const eventId = parseInt(req.params.eventId);
     const tasks = taskContainer.getTasksByEvent(eventId);
+    const tasksArray = tasks[1] as TaskSchema[];
+    res.status(200).json(tasksArray);
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Route to fetch tasks by PMM
+/**
+ * GET /api/tasks-of-pmm/:pmm
+ * Fetches tasks for a specific PMM.
+ * @param req.params.pmm - The Project Manager's name.
+ * @returns A list of tasks or an error response.
+ *
+ * Sample output:
+ * [
+ *   {
+ *     "task_id": 2,
+ *     "event_id": 1,
+ *     "donor_id": 2,
+ *     "status": "pending",
+ *     "reason": null,
+ *     "created_at": "2024-11-09 22:02:44",
+ *     "first_name": "Ahmed",
+ *     "nick_name": "",
+ *     "last_name": "Cohen",
+ *     "pmm": "PMM Value",
+ *     "organization_name": "",
+ *     "city": "Richmond",
+ *     "total_donations": 0
+ *   }
+ * ]
+ */
+app.get("/api/tasks-of-pmm/:pmm", (req: Request, res: Response<TaskSchema[] | ErrorResponse>) => {
+  try {
+    const pmm = req.params.pmm;
+    const tasks = taskContainer.getTasksByPMM(pmm);
     const tasksArray = tasks[1] as TaskSchema[];
     res.status(200).json(tasksArray);
   } catch (error) {

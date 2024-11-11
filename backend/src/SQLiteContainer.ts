@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
-import { EventSchema, DonorSchema, TaskSchema, DatabaseResponse, TaskContainerInterface } from './Types';
+import { EventSchema, DonorSchema, TaskSchema, DatabaseResponse, TaskContainerInterface, TasksAndDonorsResponse } from './Types';
 
 /**
  * Class representing a SQLite container for managing events, donors, and tasks.
@@ -331,6 +331,20 @@ class SQLiteContainer implements TaskContainerInterface {
         `;
         try {
             const rows = this.db.prepare(sqlQuery).all(eventId) as TaskSchema[];
+            return [200, rows];
+        } catch (error) {
+            console.error('Error fetching tasks for event:', (error as Error).message);
+            return [500, `An error occurred: ${(error as Error).message}`];
+        }
+    }
+    public getTasksAndDonorsByEvent(eventId: number): DatabaseResponse<TasksAndDonorsResponse[]> {
+        const sqlQuery = `
+            SELECT * FROM tasks t
+      JOIN donors d ON t.donor_id = d.donor_id
+            WHERE event_id = ?
+        `;
+        try {
+            const rows = this.db.prepare(sqlQuery).all(eventId) as TasksAndDonorsResponse[];
             return [200, rows];
         } catch (error) {
             console.error('Error fetching tasks for event:', (error as Error).message);

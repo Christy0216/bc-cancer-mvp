@@ -27,12 +27,27 @@ type Donor = {
   total_donations: number;
 };
 
+type TaskAndDonor = {
+  task_id: number;
+  event_id: number;
+  donor_id: number;
+  status: "pending" | "approved" | "rejected";
+  first_name: string;
+  last_name: string;
+  pmm: string;
+  organization_name: string;
+  city: string;
+  total_donations: number;
+};
+
 const EventDetailPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const [event, setEvent] = useState<Event | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [donors, setDonors] = useState<Donor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingTasks, setPendingTasks] = useState<TaskAndDonor[]>([]);
+  const [approvedTasks, setApprovedTasks] = useState<TaskAndDonor[]>([]);
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -68,6 +83,29 @@ const EventDetailPage: React.FC = () => {
 
     fetchEventDetails();
   }, [eventId]);
+  useEffect(() => {
+    const fetchTasksByEvent = async () => {
+      try {
+        const tasksAndDonorsResponse = await axios.get<TaskAndDonor[]>(`/api/tasksAndDonors/${eventId}`);
+        console.log(tasksAndDonorsResponse);
+        if (tasksAndDonorsResponse.data != null) {
+         const tasksAndDonorsArray = tasksAndDonorsResponse.data;
+         console.log(tasksAndDonorsArray);
+         tasksAndDonorsArray.map((task)  => {
+            if (task.status === "pending") {
+              setPendingTasks([...pendingTasks, task]);
+            } else if (task.status === "approved") {
+              setApprovedTasks([...approvedTasks, task]);
+            }
+         });
+
+        }
+      } catch (error) {
+        console.error("Error fetching tasks by event:", error);
+      }
+    };
+    fetchTasksByEvent();
+  }, [eventId]);
 
   if (loading) {
     return (
@@ -87,6 +125,7 @@ const EventDetailPage: React.FC = () => {
 
   // Calculate the task statuses for each PMM
   const taskStatsByPMM = donors.map((donor) => {
+    // may NEEDS TO FETCH DATA BY EVENT NOT PPM!!!!!
     const donorTasks = tasks.filter((task) => task.donor_id === donor.donor_id);
     const pendingCount = donorTasks.filter((task) => task.status === "pending").length;
     const approvedCount = donorTasks.filter((task) => task.status === "approved").length;
@@ -136,18 +175,18 @@ const EventDetailPage: React.FC = () => {
           <thead>
             <tr className="bg-gray-100">
               <th className="border px-4 py-2 text-left">Task</th>
-              <th className="border px-4 py-2 text-left">Pending Number</th>
-              <th className="border px-4 py-2 text-left">Approve</th>
-              <th className="border px-4 py-2 text-left">Reject</th>
+              <th className="border px-4 py-2 text-left">Donor</th>
+              <th className="border px-4 py-2 text-left">PMM</th>
+              <th className="border px-4 py-2 text-left">City</th>
             </tr>
           </thead>
           <tbody>
-            {taskStatsByPMM.map((stat, index) => (
+            {pendingTasks.map((stat, index) => (
               <tr key={index} className="hover:bg-gray-50">
+                <td className="border px-4 py-2">{stat.task_id}</td>
+                <td className="border px-4 py-2">{stat.first_name}</td>
                 <td className="border px-4 py-2">{stat.pmm}</td>
-                <td className="border px-4 py-2">{stat.pending}</td>
-                <td className="border px-4 py-2">{stat.approved}</td>
-                <td className="border px-4 py-2">{stat.rejected}</td>
+                <td className="border px-4 py-2">{stat.city}</td>
               </tr>
             ))}
           </tbody>

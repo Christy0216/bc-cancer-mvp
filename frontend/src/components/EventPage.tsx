@@ -87,9 +87,11 @@ const EventPage: React.FC = () => {
   };
 
   const handleMyTasksClick = () => {
-    const isPMM = localStorage.getItem("isPMM") === "true";
+    console.log('username:', sessionStorage.getItem('userName'));
+    
+    const isPMM = sessionStorage.getItem("isPMM") === "true";
     if (isPMM) {
-      const pmmName = localStorage.getItem("pmmName");
+      const pmmName = sessionStorage.getItem("pmmName");
       navigate(`/pmm-details/${pmmName}`);
     } else {
       alert("You do not have permission to access this page. Only PMMs can view tasks.");

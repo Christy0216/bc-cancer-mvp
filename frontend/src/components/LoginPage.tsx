@@ -10,16 +10,19 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
 
     try {
-      // Store the username in local storage
-      localStorage.setItem('userName', userName);
+      // Store the username in session storage
+      sessionStorage.setItem('userName', userName);
 
       // Check if the username is a PMM
       const response = await axios.get('/api/pmm');
-      const pmmList = response.data;
+      const pmmList: string[] = response.data;
 
-      const isPMM = pmmList.some((pmm: { name: string }) => pmm.name === userName);
-      localStorage.setItem('isPMM', isPMM.toString());
-      localStorage.setItem('pmmName', isPMM ? userName : '');
+      // Adjusted to check directly against the array of strings
+      const isPMM = pmmList.includes(userName);
+      sessionStorage.setItem('isPMM', isPMM.toString());
+      sessionStorage.setItem('pmmName', isPMM ? userName : '');
+
+      console.log('isPMM:', isPMM);
 
       // Navigate to events page after login
       navigate('/events');
@@ -28,6 +31,7 @@ const LoginPage: React.FC = () => {
       alert("An error occurred while trying to log in. Please try again.");
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">

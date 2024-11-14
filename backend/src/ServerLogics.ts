@@ -263,10 +263,16 @@ app.post("/api/tasks", async (req: Request, res: Response) => {
  *   "status": "approved"
  * }
  */
-app.put("/api/task", async (req: Request, res: Response) => {
-  const { taskId, status } = req.body;
+app.put("/api/task", async (req: Request, res: Response): Promise<void> => {
+  const { taskId, status, reason } = req.body;
 
-  const updateResult = taskContainer.updateTaskStatus(taskId, status);
+  // Validate: if status is "rejected", reason must be provided
+  if (status === "rejected" && !reason) {
+    res.status(400).json({ message: "Reason is required when status is rejected." });
+    return;
+  }
+
+  const updateResult = taskContainer.updateTaskStatus(taskId, status, reason);
   if (updateResult[0] === 200) {
     res.status(200).json({ message: updateResult[1] });
   } else {
@@ -332,7 +338,7 @@ app.post("/api/setup-event", async (req: Request, res: Response): Promise<void> 
 
     // Step 3: Prepare donor records for insertion
     const donorIds: number[] = [];
-    const donorRecords: Omit<DonorSchema, "donor_id"|'created_at'>[] = matchedDonors.data.map((donor: any) => ({
+    const donorRecords: Omit<DonorSchema, "donor_id" | 'created_at'>[] = matchedDonors.data.map((donor: any) => ({
       first_name: donor[5] as string,
       nick_name: donor[6] as string,
       last_name: donor[7] as string,
@@ -363,7 +369,7 @@ app.post("/api/setup-event", async (req: Request, res: Response): Promise<void> 
         res.status(500).json({ message: "Unexpected error when checking for existing donor." });
         return;
       }
-      
+
       if (donorId !== null) {
         // Collect donor_id for task creation
         donorIds.push(donorId);
@@ -528,67 +534,67 @@ app.post("/api/setup-event", async (req: Request, res: Response): Promise<void> 
 }
  */
 app.post('/api/setup-tasks', async (req: Request, res: Response) => {
-    try {
+  try {
 
-      const { eventId, matchedDonors } = req.body;
+    const { eventId, matchedDonors } = req.body;
 
-      // Step 3: Prepare donor records for insertion
-      const donorIds: number[] = [];
-      const donorRecords: Omit<DonorSchema, "donor_id">[] = matchedDonors.data.map((donor: any) => ({
-        first_name: donor[5] as string,
-        nick_name: donor[6] as string,
-        last_name: donor[7] as string,
-        pmm: donor[0] as string,
-        organization_name: donor[8] as string,
-        city: donor[20] as string,
-        total_donations: donor[9] as number,
-      }));
-  
-      for (const donorRecord of donorRecords) {
-        // Check if donor already exists
-        const existingDonor = taskContainer.findDonorByName(donorRecord.first_name, donorRecord.last_name);
-        let donorId: number | null = null;
-  
-        if (existingDonor[0] === 200) {
-          // Donor exists, use the existing donor_id
-          donorId = (existingDonor[1] as DonorSchema).donor_id;
-        } else if (existingDonor[0] === 404) {
-          // Donor does not exist, add to the database
-          const addDonorResult = taskContainer.addDonor(donorRecord);
-          if (addDonorResult[0] !== 200) {
-            res.status(500).json({ message: "Failed to add donor to the database." });
-            return;
-          }
-          donorId = addDonorResult[1];
-        } else {
-          // Handle any unexpected error
-          res.status(500).json({ message: "Unexpected error when checking for existing donor." });
+    // Step 3: Prepare donor records for insertion
+    const donorIds: number[] = [];
+    const donorRecords: Omit<DonorSchema, "donor_id">[] = matchedDonors.data.map((donor: any) => ({
+      first_name: donor[5] as string,
+      nick_name: donor[6] as string,
+      last_name: donor[7] as string,
+      pmm: donor[0] as string,
+      organization_name: donor[8] as string,
+      city: donor[20] as string,
+      total_donations: donor[9] as number,
+    }));
+
+    for (const donorRecord of donorRecords) {
+      // Check if donor already exists
+      const existingDonor = taskContainer.findDonorByName(donorRecord.first_name, donorRecord.last_name);
+      let donorId: number | null = null;
+
+      if (existingDonor[0] === 200) {
+        // Donor exists, use the existing donor_id
+        donorId = (existingDonor[1] as DonorSchema).donor_id;
+      } else if (existingDonor[0] === 404) {
+        // Donor does not exist, add to the database
+        const addDonorResult = taskContainer.addDonor(donorRecord);
+        if (addDonorResult[0] !== 200) {
+          res.status(500).json({ message: "Failed to add donor to the database." });
           return;
         }
-        
-        if (donorId !== null) {
-          // Collect donor_id for task creation
-          donorIds.push(donorId);
-        }
-      }
-  
-      // Step 4: Create tasks for each donor and the event
-      const taskCreationResult = taskContainer.createTasksForEvent(eventId as number, donorIds);
-  
-      if (taskCreationResult[0] === 200) {
-        res.status(200).json({
-          message: `Event setup completed with event ID: ${eventId}`,
-          event_id: eventId,
-          tasks_status: taskCreationResult[1],
-        });
+        donorId = addDonorResult[1];
       } else {
-        res.status(500).json({ message: "Failed to create tasks for matched donors." });
+        // Handle any unexpected error
+        res.status(500).json({ message: "Unexpected error when checking for existing donor." });
+        return;
       }
-    } catch (error) {
-      console.error("Error in setting up event:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+
+      if (donorId !== null) {
+        // Collect donor_id for task creation
+        donorIds.push(donorId);
+      }
     }
-  });
+
+    // Step 4: Create tasks for each donor and the event
+    const taskCreationResult = taskContainer.createTasksForEvent(eventId as number, donorIds);
+
+    if (taskCreationResult[0] === 200) {
+      res.status(200).json({
+        message: `Event setup completed with event ID: ${eventId}`,
+        event_id: eventId,
+        tasks_status: taskCreationResult[1],
+      });
+    } else {
+      res.status(500).json({ message: "Failed to create tasks for matched donors." });
+    }
+  } catch (error) {
+    console.error("Error in setting up event:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 /**
  * GET /api/tasks/:eventId
@@ -615,7 +621,7 @@ app.post('/api/setup-tasks', async (req: Request, res: Response) => {
  *   }
  * ]
  */
-app.get("/api/tasks/:eventId", (req: Request, res: Response<TaskSchema[] | ErrorResponse>)=> {
+app.get("/api/tasks/:eventId", (req: Request, res: Response<TaskSchema[] | ErrorResponse>) => {
   try {
     const eventId = parseInt(req.params.eventId);
     const tasks = taskContainer.getTasksByEvent(eventId);
@@ -673,7 +679,7 @@ app.get("/api/tasks-of-pmm/:pmm", (req: Request, res: Response<TaskSchema[] | Er
  */
 
 app.get("/api/pmm", (req: Request, res: Response) => {
-  try{
+  try {
     const [statusCode, result] = taskContainer.getPMMs();
     res.status(statusCode).json(result);
   } catch (error) {

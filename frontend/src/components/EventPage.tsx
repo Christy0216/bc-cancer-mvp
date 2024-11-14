@@ -54,7 +54,7 @@ const EventPage: React.FC = () => {
 
         const taskResponse = await axios.get<Task[]>("/api/tasks");
         const tasks = taskResponse.data;
-        console.log(taskResponse);
+
         const eventsWithStatus = events.map((event) => {
           const eventTasks = tasks.filter(
             (task) => task.event_id === event.event_id
@@ -84,6 +84,16 @@ const EventPage: React.FC = () => {
 
   const handleCreateEvent = () => {
     navigate("/create-event");
+  };
+
+  const handleMyTasksClick = () => {
+    const isPMM = localStorage.getItem("isPMM") === "true";
+    if (isPMM) {
+      const pmmName = localStorage.getItem("pmmName");
+      navigate(`/pmm-details/${pmmName}`);
+    } else {
+      alert("You do not have permission to access this page. Only PMMs can view tasks.");
+    }
   };
 
   const handleEventClick = (eventId: number) => {
@@ -129,6 +139,12 @@ const EventPage: React.FC = () => {
           className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg mb-6 transition duration-300 ease-in-out"
         >
           New Event
+        </button>
+        <button
+          onClick={handleMyTasksClick}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg mb-6 transition duration-300 ease-in-out"
+        >
+          My Tasks
         </button>
         <div className="space-y-4">
           {events.map((event) => (

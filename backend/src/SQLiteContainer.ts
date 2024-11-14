@@ -323,7 +323,7 @@ class SQLiteContainer implements TaskContainerInterface {
                 donors.total_donations
             FROM tasks
             JOIN donors ON tasks.donor_id = donors.donor_id
-            WHERE donors.pmm = ?
+            WHERE donors.pmm = ? COLLATE NOCASE
         `;
         try {
             const rows = this.db.prepare(sqlQuery).all(pmm) as TaskSchema[];
@@ -391,6 +391,24 @@ class SQLiteContainer implements TaskContainerInterface {
             return [200, rows];
         } catch (error) {
             console.error('Error fetching tasks for event:', (error as Error).message);
+            return [500, `An error occurred: ${(error as Error).message}`];
+        }
+    }
+
+    /**
+     * Fetches all PMMs from the database.
+     * @returns A tuple containing the status code and an array of PMM names.
+     */
+    public getPMMs(): DatabaseResponse<string[]> {
+        const sqlQuery = `
+            SELECT DISTINCT pmm
+            FROM donors
+        `;
+        try {
+            const rows = this.db.prepare(sqlQuery).all() as { pmm: string }[];
+            return [200, rows.map(row => row.pmm)];
+        } catch (error) {
+            console.error('Error fetching PMMs:', (error as Error).message);
             return [500, `An error occurred: ${(error as Error).message}`];
         }
     }

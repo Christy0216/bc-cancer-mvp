@@ -665,4 +665,21 @@ app.get("/api/tasks-of-pmm/:pmm", (req: Request, res: Response<TaskSchema[] | Er
   }
 });
 
+// Route to fetch PMMs
+/**
+ * GET /api/pmm
+ * Fetches a list of PMMs.
+ * @returns A list of PMMs or an error response.
+ */
+
+app.get("/api/pmm", (req: Request, res: Response) => {
+  try{
+    const [statusCode, result] = taskContainer.getPMMs();
+    res.status(statusCode).json(result);
+  } catch (error) {
+    console.error("Error fetching PMMs:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 export { app };

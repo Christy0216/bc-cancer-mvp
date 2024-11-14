@@ -51,7 +51,6 @@ const EventDetailPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const [event, setEvent] = useState<Event | null>(null);
   const [tasks, setTasks] = useState<TaskAndDonor[]>([]);
-  const [donors, setDonors] = useState<Donor[]>([]);
   const [loading, setLoading] = useState(true);
   const [pmmTaskSummaries, setPmmTaskSummaries] = useState<PMMTaskSummary[]>([]);
 
@@ -66,22 +65,14 @@ const EventDetailPage: React.FC = () => {
         setEvent(foundEvent || null);
 
         if (foundEvent) {
-          // Fetch Tasks related to the Event
+          // Fetch Tasks and Donor details related to the Event
           const tasksAndDonorsResponse = await axios.get<TaskAndDonor[]>(`/api/tasks/${eventId}`);
           setTasks(tasksAndDonorsResponse.data);
-
-          // Fetch unique donor IDs
-          const donorIds = [...new Set(tasksAndDonorsResponse.data.map((task) => task.donor_id))];
-          const donorPromises = donorIds.map((id) =>
-            axios.get<Donor>(`/api/donors/${id}`)
-          );
-          const donorResults = await Promise.all(donorPromises);
-          setDonors(donorResults.map((result) => result.data));
 
           // Fetch tasks summary for each PMM
           const pmmNames = [...new Set(tasksAndDonorsResponse.data.map((task) => task.pmm))];
           const pmmSummaryPromises = pmmNames.map(async (pmm) => {
-            const response = await axios.get<Task[]>(`/api/tasks-of-pmm/${pmm}`);
+            const response = await axios.get<TaskAndDonor[]>(`/api/tasks-of-pmm/${pmm}`);
             const tasks = response.data;
 
             const pendingCount = tasks.filter((task) => task.status === "pending").length;

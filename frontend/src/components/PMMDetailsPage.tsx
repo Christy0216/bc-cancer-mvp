@@ -31,8 +31,18 @@ const PMMDetailsPage: React.FC = () => {
   const [jumpToPage, setJumpToPage] = useState(currentPage.toString());
 
   useEffect(() => {
-    const fetchTasksByPMM = async () => {
+    const fetchPMMDetailsAndTasks = async () => {
       try {
+        // Fetch PMM summary to confirm if pmmName is valid
+        const pmmResponse = await axios.get(`/api/pmm`);
+        const pmmList = pmmResponse.data;
+        const isValidPMM = pmmList.some((pmm: any) => pmm.name === pmmName);
+
+        if (!isValidPMM) {
+          setLoading(false);
+          return;
+        }
+
         // Fetch tasks for the specific PMM using the backend API
         const response = await axios.get<Task[]>(`/api/tasks-of-pmm/${pmmName}`);
         const fetchedTasks = response.data;
@@ -41,7 +51,9 @@ const PMMDetailsPage: React.FC = () => {
 
         // Calculate pending and completed tasks
         const pendingCount = fetchedTasks.filter(task => task.status === "pending").length;
-        const completedCount = fetchedTasks.filter(task => task.status === "approved" || task.status === "rejected").length;
+        const completedCount = fetchedTasks.filter(
+          task => task.status === "approved" || task.status === "rejected"
+        ).length;
 
         // Set PMM summary if pmmName is defined
         if (pmmName) {
@@ -59,7 +71,7 @@ const PMMDetailsPage: React.FC = () => {
       }
     };
 
-    fetchTasksByPMM();
+    fetchPMMDetailsAndTasks();
   }, [pmmName]);
 
   if (loading) {
@@ -80,7 +92,9 @@ const PMMDetailsPage: React.FC = () => {
 
   // Split tasks into pending and completed for rendering
   const pendingTasks = tasks.filter(task => task.status === "pending");
-  const completedTasks = tasks.filter(task => task.status === "approved" || task.status === "rejected");
+  const completedTasks = tasks.filter(
+    task => task.status === "approved" || task.status === "rejected"
+  );
 
   // Pagination logic
   const totalPages = Math.ceil(tasks.length / tasksPerPage);

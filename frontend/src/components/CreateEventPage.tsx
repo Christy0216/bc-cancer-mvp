@@ -14,6 +14,7 @@ type Donor = {
   last_name: string;
   city: string;
   total_donations?: number;
+  pmm: string;
 };
 
 type CityOption = {
@@ -90,6 +91,7 @@ const CreateEventPage: React.FC = () => {
           last_name: donor[7],
           city: donor[20],
           total_donations: donor[9],
+          pmm: donor[0],
         }));
         setDonors(formattedDonors);
       } else {
@@ -305,6 +307,7 @@ const CreateEventPage: React.FC = () => {
                       <th className="px-4 py-2 font-semibold text-left border-b">
                         Last Name
                       </th>
+                      <th className="px-4 py-2 font-semibold text-left border-b">PMM</th>
                       <th className="px-4 py-2 font-semibold text-left border-b">
                         City
                       </th>
@@ -346,6 +349,7 @@ const CreateEventPage: React.FC = () => {
                           <td className="px-4 py-2 border">
                             {donor.last_name}
                           </td>
+                          <td className="px-4 py-2 border">{donor.pmm}</td>
                           <td className="px-4 py-2 border">{donor.city}</td>
                           <td className="px-4 py-2 border">
                             {donor.total_donations !== undefined

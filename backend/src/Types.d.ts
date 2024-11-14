@@ -86,4 +86,5 @@ export interface TaskContainerInterface {
   getTasks(): DatabaseResponse<TaskSchema[]>;
   getTasksByPMM(pmm: string): DatabaseResponse<TaskSchema[]>;
   getTasksByEvent(eventId: number): DatabaseResponse<TaskSchema[]>;
+  getPMMs(): DatabaseResponse<string[]>;
 }

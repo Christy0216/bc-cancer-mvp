@@ -11,10 +11,12 @@ import {
 
 type Donor = {
   first_name: string;
+  nick_name: string;
   last_name: string;
+  pmm: string;
+  organization_name: string;
   city: string;
   total_donations?: number;
-  pmm: string;
 };
 
 type CityOption = {
@@ -86,12 +88,14 @@ const CreateEventPage: React.FC = () => {
 
       if (response.data && response.data.data) {
         const donorsArray = response.data.data;
-        const formattedDonors = donorsArray.map((donor: any[]) => ({
+        const formattedDonors = donorsArray.map((donor: Donor[]) => ({
           first_name: donor[5],
+          nick_name: donor[6],
           last_name: donor[7],
+          pmm: donor[0],
+          organization_name: donor[8],
           city: donor[20],
           total_donations: donor[9],
-          pmm: donor[0],
         }));
         // Step 1: Save donors to the backend using POST /api/donor endpoint
         const saveDonorsResponse = await axios.post('/api/donors', formattedDonors);

@@ -2,15 +2,25 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const LoginPage: React.FC = () => {
-    const [userName, setUserName] = useState('');
-    const navigate = useNavigate();
-  
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      console.log({ userName });
-      // After login, navigate to EventScreen
-      navigate('/events');
-    };
+  const [userName, setUserName] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Check if the username matches known PMMs for simplicity.
+    // This check can be replaced with a real API check later.
+    const pmmList = ['PMM1', 'PMM2', 'PMM3']; // Replace with actual PMM names.
+    if (pmmList.includes(userName)) {
+      localStorage.setItem('isPMM', 'true');
+      localStorage.setItem('pmmName', userName);
+    } else {
+      localStorage.setItem('isPMM', 'false');
+    }
+
+    // Navigate to Event Page after login
+    navigate('/events');
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">

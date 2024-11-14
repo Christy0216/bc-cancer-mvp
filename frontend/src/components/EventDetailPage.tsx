@@ -40,18 +40,25 @@ type TaskAndDonor = {
   total_donations: number;
 };
 
+type PMMTaskSummary = {
+  pmm: string;
+  pendingCount: number;
+  completedCount: number;
+  invitedCount: number;
+};
+
 const EventDetailPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const [event, setEvent] = useState<Event | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<TaskAndDonor[]>([]);
   const [donors, setDonors] = useState<Donor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pendingTasks, setPendingTasks] = useState<TaskAndDonor[]>([]);
-  const [approvedTasks, setApprovedTasks] = useState<TaskAndDonor[]>([]);
+  const [pmmTaskSummaries, setPmmTaskSummaries] = useState<PMMTaskSummary[]>([]);
 
   useEffect(() => {
     const fetchEventDetails = async () => {
       try {
+        // Fetch Event
         const eventResponse = await axios.get<Event[]>("/api/events");
         const foundEvent = eventResponse.data.find(
           (e) => e.event_id === parseInt(eventId!, 10)
@@ -59,19 +66,41 @@ const EventDetailPage: React.FC = () => {
         setEvent(foundEvent || null);
 
         if (foundEvent) {
-          const taskResponse = await axios.get<Task[]>("/api/tasks");
-          const relatedTasks = taskResponse.data.filter(
-            (task) => task.event_id === foundEvent.event_id
-          );
-          setTasks(relatedTasks);
+          // Fetch Tasks related to the Event
+          const tasksAndDonorsResponse = await axios.get<TaskAndDonor[]>(`/api/tasks/${eventId}`);
+          setTasks(tasksAndDonorsResponse.data);
 
           // Fetch unique donor IDs
-          const donorIds = [...new Set(relatedTasks.map((task) => task.donor_id))];
+          const donorIds = [...new Set(tasksAndDonorsResponse.data.map((task) => task.donor_id))];
           const donorPromises = donorIds.map((id) =>
             axios.get<Donor>(`/api/donors/${id}`)
           );
           const donorResults = await Promise.all(donorPromises);
           setDonors(donorResults.map((result) => result.data));
+
+          // Fetch tasks summary for each PMM
+          const pmmNames = [...new Set(tasksAndDonorsResponse.data.map((task) => task.pmm))];
+          const pmmSummaryPromises = pmmNames.map(async (pmm) => {
+            const response = await axios.get<Task[]>(`/api/tasks-of-pmm/${pmm}`);
+            const tasks = response.data;
+
+            const pendingCount = tasks.filter((task) => task.status === "pending").length;
+            const completedCount = tasks.filter(
+              (task) => task.status === "approved" || task.status === "rejected"
+            ).length;
+            const invitedCount = tasks.filter((task) => task.status === "approved").length;
+
+            return {
+              pmm,
+              pendingCount,
+              completedCount,
+              invitedCount,
+            };
+          });
+
+          const pmmTaskSummaries = await Promise.all(pmmSummaryPromises);
+          setPmmTaskSummaries(pmmTaskSummaries);
+          console.log("PMM Task Summaries:", pmmTaskSummaries); // Debugging line to check the data
         }
 
         setLoading(false);
@@ -82,29 +111,6 @@ const EventDetailPage: React.FC = () => {
     };
 
     fetchEventDetails();
-  }, [eventId]);
-  useEffect(() => {
-    const fetchTasksByEvent = async () => {
-      try {
-        const tasksAndDonorsResponse = await axios.get<TaskAndDonor[]>(`/api/tasks/${eventId}`);
-        console.log(tasksAndDonorsResponse);
-        if (tasksAndDonorsResponse.data != null) {
-         const tasksAndDonorsArray = tasksAndDonorsResponse.data;
-         console.log(tasksAndDonorsArray);
-         tasksAndDonorsArray.map((task)  => {
-            if (task.status === "pending") {
-              setPendingTasks([...pendingTasks, task]);
-            } else if (task.status === "approved") {
-              setApprovedTasks([...approvedTasks, task]);
-            }
-         });
-
-        }
-      } catch (error) {
-        console.error("Error fetching tasks by event:", error);
-      }
-    };
-    fetchTasksByEvent();
   }, [eventId]);
 
   if (loading) {
@@ -123,21 +129,8 @@ const EventDetailPage: React.FC = () => {
     );
   }
 
-  // Calculate the task statuses for each PMM
-  const taskStatsByPMM = donors.map((donor) => {
-    // may NEEDS TO FETCH DATA BY EVENT NOT PPM!!!!!
-    const donorTasks = tasks.filter((task) => task.donor_id === donor.donor_id);
-    const pendingCount = donorTasks.filter((task) => task.status === "pending").length;
-    const approvedCount = donorTasks.filter((task) => task.status === "approved").length;
-    const rejectedCount = donorTasks.filter((task) => task.status === "rejected").length;
-
-    return {
-      pmm: donor.pmm,
-      pending: pendingCount,
-      approved: approvedCount,
-      rejected: rejectedCount,
-    };
-  });
+  const pendingTasksCount = tasks.filter((task) => task.status === "pending").length;
+  const completedTasks = tasks.filter((task) => task.status === "approved" || task.status === "rejected");
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-500 to-purple-600 p-8">
@@ -147,30 +140,32 @@ const EventDetailPage: React.FC = () => {
         <p className="text-lg mb-4"><strong>Location:</strong> {event.location}</p>
         <p className="text-md mb-6">{event.description}</p>
 
-        {/* Three columns for PMM stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div>
-            <h2 className="text-xl font-semibold mb-2 text-center">Pending</h2>
-            {taskStatsByPMM.map((stat, index) => (
-              <p key={index} className="text-center text-gray-700">{stat.pmm}: {stat.pending}</p>
+        {/* Summary table for Pending, Completed, Invited tasks by PMM */}
+        <h2 className="text-2xl font-bold mb-4">Summary of Tasks by PMM</h2>
+        <table className="w-full border-collapse mb-6">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border px-4 py-2 text-left">PMM</th>
+              <th className="border px-4 py-2 text-left">Pending Tasks</th>
+              <th className="border px-4 py-2 text-left">Completed Tasks</th>
+              <th className="border px-4 py-2 text-left">Invited</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pmmTaskSummaries.map((summary, index) => (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="border px-4 py-2">{summary.pmm}</td>
+                <td className="border px-4 py-2">{summary.pendingCount}</td>
+                <td className="border px-4 py-2">{summary.completedCount}</td>
+                <td className="border px-4 py-2">{summary.invitedCount}</td>
+              </tr>
             ))}
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold mb-2 text-center">Completed</h2>
-            {taskStatsByPMM.map((stat, index) => (
-              <p key={index} className="text-center text-gray-700">{stat.pmm}: {stat.approved + stat.rejected}</p>
-            ))}
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold mb-2 text-center">Invited</h2>
-            {taskStatsByPMM.map((stat, index) => (
-              <p key={index} className="text-center text-gray-700">{stat.pmm}: {stat.approved}</p>
-            ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
 
-        {/* First table */}
-        <h2 className="text-2xl font-bold mb-4">Task</h2>
+        {/* First table: All tasks related to the current event */}
+        <h2 className="text-2xl font-bold mb-4">All Tasks for Event</h2>
+        <p className="text-lg mb-4">Total Pending Tasks: {pendingTasksCount}</p>
         <table className="w-full border-collapse mb-6">
           <thead>
             <tr className="bg-gray-100">
@@ -178,38 +173,43 @@ const EventDetailPage: React.FC = () => {
               <th className="border px-4 py-2 text-left">Donor</th>
               <th className="border px-4 py-2 text-left">PMM</th>
               <th className="border px-4 py-2 text-left">City</th>
+              <th className="border px-4 py-2 text-left">Status</th>
             </tr>
           </thead>
           <tbody>
-            {pendingTasks.map((stat, index) => (
+            {tasks.map((task, index) => (
               <tr key={index} className="hover:bg-gray-50">
-                <td className="border px-4 py-2">{stat.task_id}</td>
-                <td className="border px-4 py-2">{stat.first_name}</td>
-                <td className="border px-4 py-2">{stat.pmm}</td>
-                <td className="border px-4 py-2">{stat.city}</td>
+                <td className="border px-4 py-2">{task.task_id}</td>
+                <td className="border px-4 py-2">{task.first_name} {task.last_name}</td>
+                <td className="border px-4 py-2">{task.pmm}</td>
+                <td className="border px-4 py-2">{task.city}</td>
+                <td className="border px-4 py-2">{task.status}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {/* Second table */}
-        <h2 className="text-2xl font-bold mb-4">Task Complete: Invited</h2>
-        <table className="w-full border-collapse">
+        {/* Second table: Completed tasks related to the current event */}
+        <h2 className="text-2xl font-bold mb-4">Completed Tasks</h2>
+        <p className="text-lg mb-4">Total Completed Tasks: {completedTasks.length}</p>
+        <table className="w-full border-collapse mb-6">
           <thead>
             <tr className="bg-gray-100">
               <th className="border px-4 py-2 text-left">Task</th>
-              <th className="border px-4 py-2 text-left">Pending Number</th>
-              <th className="border px-4 py-2 text-left">Approve</th>
-              <th className="border px-4 py-2 text-left">Reject</th>
+              <th className="border px-4 py-2 text-left">Donor</th>
+              <th className="border px-4 py-2 text-left">PMM</th>
+              <th className="border px-4 py-2 text-left">City</th>
+              <th className="border px-4 py-2 text-left">Status</th>
             </tr>
           </thead>
           <tbody>
-            {taskStatsByPMM.map((stat, index) => (
+            {completedTasks.map((task, index) => (
               <tr key={index} className="hover:bg-gray-50">
-                <td className="border px-4 py-2">{stat.pmm}</td>
-                <td className="border px-4 py-2">{stat.pending}</td>
-                <td className="border px-4 py-2">{stat.approved}</td>
-                <td className="border px-4 py-2">{stat.rejected}</td>
+                <td className="border px-4 py-2">{task.task_id}</td>
+                <td className="border px-4 py-2">{task.first_name} {task.last_name}</td>
+                <td className="border px-4 py-2">{task.pmm}</td>
+                <td className="border px-4 py-2">{task.city}</td>
+                <td className="border px-4 py-2">{task.status}</td>
               </tr>
             ))}
           </tbody>

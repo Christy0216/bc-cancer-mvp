@@ -93,7 +93,15 @@ const CreateEventPage: React.FC = () => {
           total_donations: donor[9],
           pmm: donor[0],
         }));
-        setDonors(formattedDonors);
+        // Step 1: Save donors to the backend using POST /api/donor endpoint
+        const saveDonorsResponse = await axios.post('/api/donors', formattedDonors);
+
+        if (saveDonorsResponse.status === 200) {
+            // Step 2: Set donors state if saving was successful
+            setDonors(formattedDonors);
+        } else {
+            console.warn("Failed to save donors to the database:", saveDonorsResponse.data);
+        }
       } else {
         console.warn("Unexpected data format from API:", response.data);
         setDonors([]);

@@ -132,13 +132,9 @@ const CreateEventPage: React.FC = () => {
       alert("Event ID is missing. Please create the event first.");
       return;
     }
-
-    const selectedDonorList = donors
-      .slice((currentPage - 1) * donorsPerPage, currentPage * donorsPerPage)
-      .filter((_, index) =>
-        selectedDonors.has((currentPage - 1) * donorsPerPage + index)
-      );
-
+  
+    const selectedDonorList = donors.filter((_, index) => selectedDonors.has(index));
+  
     try {
       const response = await axios.post("/api/setup-tasks", {
         eventId,
@@ -185,7 +181,7 @@ const CreateEventPage: React.FC = () => {
       alert("Failed to create tasks");
     }
   };
-
+  
   const totalPages = Math.ceil(donors.length / donorsPerPage);
 
   const handlePageChange = (newPage: number) => {

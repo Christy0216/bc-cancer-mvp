@@ -92,7 +92,7 @@ const EventPage: React.FC = () => {
     const isPMM = sessionStorage.getItem("isPMM") === "true";
     if (isPMM) {
       const pmmName = sessionStorage.getItem("pmmName");
-      navigate(`/pmm-details/${pmmName}`);
+      navigate(`/pmm/${pmmName}`);
     } else {
       alert("You do not have permission to access this page. Only PMMs can view tasks.");
     }

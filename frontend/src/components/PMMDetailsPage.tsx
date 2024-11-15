@@ -23,6 +23,7 @@ type PMMSummary = {
 
 const PMMDetailsPage: React.FC = () => {
   const { pmmName } = useParams<{ pmmName: string }>();
+  const decodedPmmName = decodeURIComponent(pmmName || "");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [pmmSummary, setPmmSummary] = useState<PMMSummary | null>(null);
@@ -33,46 +34,38 @@ const PMMDetailsPage: React.FC = () => {
   useEffect(() => {
     const fetchPMMDetailsAndTasks = async () => {
       try {
-        // Fetch PMM summary to confirm if pmmName is valid
         const pmmResponse = await axios.get(`/api/pmm`);
         const pmmList = pmmResponse.data;
-        const isValidPMM = pmmList.some((pmm: any) => pmm.name === pmmName);
-
+        const isValidPMM = pmmList.some((pmm: string) => pmm === decodedPmmName);
+  
         if (!isValidPMM) {
           setLoading(false);
           return;
         }
-
-        // Fetch tasks for the specific PMM using the backend API
-        const response = await axios.get<Task[]>(`/api/tasks-of-pmm/${pmmName}`);
+  
+        const response = await axios.get<Task[]>(`/api/tasks-of-pmm/${decodedPmmName}`);
         const fetchedTasks = response.data;
-
+  
         setTasks(fetchedTasks);
-
-        // Calculate pending and completed tasks
+  
         const pendingCount = fetchedTasks.filter(task => task.status === "pending").length;
-        const completedCount = fetchedTasks.filter(
-          task => task.status === "approved" || task.status === "rejected"
-        ).length;
-
-        // Set PMM summary if pmmName is defined
-        if (pmmName) {
-          setPmmSummary({
-            pmm: pmmName,
-            pendingCount,
-            completedCount,
-          });
-        }
-
+        const completedCount = fetchedTasks.filter(task => task.status === "approved" || task.status === "rejected").length;
+  
+        setPmmSummary({
+          pmm: decodedPmmName,
+          pendingCount,
+          completedCount,
+        });
+  
         setLoading(false);
       } catch (error) {
         console.error("Error fetching tasks for PMM:", error);
         setLoading(false);
       }
     };
-
+  
     fetchPMMDetailsAndTasks();
-  }, [pmmName]);
+  }, [decodedPmmName]);
 
   if (loading) {
     return (

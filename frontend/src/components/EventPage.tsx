@@ -136,18 +136,22 @@ const EventPage: React.FC = () => {
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
           Events
         </h1>
-        <button
-          onClick={handleCreateEvent}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg mb-6 transition duration-300 ease-in-out"
-        >
-          New Event
-        </button>
-        <button
-          onClick={handleMyTasksClick}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg mb-6 transition duration-300 ease-in-out"
-        >
-          My Tasks
-        </button>
+        {sessionStorage.getItem("isPMM") !== "true" && (
+          <button
+            onClick={handleCreateEvent}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg mb-6 transition duration-300 ease-in-out"
+          >
+            New Event
+          </button>
+        )}
+        {sessionStorage.getItem("isPMM") === "true" && (
+          <button
+            onClick={handleMyTasksClick}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg mb-6 transition duration-300 ease-in-out"
+          >
+            My Tasks
+          </button>
+        )}
         <div className="space-y-4">
           {events.map((event) => (
             <div

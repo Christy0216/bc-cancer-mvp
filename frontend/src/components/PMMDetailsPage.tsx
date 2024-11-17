@@ -14,6 +14,7 @@ type Task = {
   task_id: number;
   event_id: number;
   donor_id: number;
+  donor_name: string;
   status: "pending" | "approved" | "rejected";
   reason?: string | null; // Added reason field
 };
@@ -245,7 +246,7 @@ const PMMDetailsPage: React.FC = () => {
             <tr className="bg-gray-100">
               <th className="border px-4 py-2 text-left">Task ID</th>
               <th className="border px-4 py-2 text-left">Event ID</th>
-              <th className="border px-4 py-2 text-left">Donor ID</th>
+              <th className="border px-4 py-2 text-left">Donor</th>
               <th className="border px-4 py-2 text-left">Action</th>
             </tr>
           </thead>
@@ -259,7 +260,7 @@ const PMMDetailsPage: React.FC = () => {
                 <tr key={task.task_id} className="hover:bg-gray-50">
                   <td className="border px-4 py-2">{task.task_id}</td>
                   <td className="border px-4 py-2">{task.event_id}</td>
-                  <td className="border px-4 py-2">{task.donor_id}</td>
+                  <td className="border px-4 py-2">{task.donor_name}</td>
                   <td className="border px-4 py-2">
                     <div className="flex space-x-2">
                       <button
@@ -378,7 +379,7 @@ const PMMDetailsPage: React.FC = () => {
                 <tr className="bg-gray-100">
                   <th className="border px-4 py-2 text-left">Task ID</th>
                   <th className="border px-4 py-2 text-left">Event ID</th>
-                  <th className="border px-4 py-2 text-left">Donor ID</th>
+                  <th className="border px-4 py-2 text-left">Donor</th>
                   <th className="border px-4 py-2 text-left">Status</th>
                 </tr>
               </thead>
@@ -387,7 +388,7 @@ const PMMDetailsPage: React.FC = () => {
                   <tr key={task.task_id} className="hover:bg-gray-50">
                     <td className="border px-4 py-2">{task.task_id}</td>
                     <td className="border px-4 py-2">{task.event_id}</td>
-                    <td className="border px-4 py-2">{task.donor_id}</td>
+                    <td className="border px-4 py-2">{task.donor_name}</td>
                     <td className="border px-4 py-2 capitalize flex items-center">
                       {task.status}
                       {task.status === "rejected" && task.reason && (

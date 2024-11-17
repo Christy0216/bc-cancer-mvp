@@ -59,13 +59,14 @@ export interface TaskSchema {
   task_id: number;
   event_id: number;
   donor_id: number;
-  status: 'pending' | 'approved' | 'rejected'; // Define status options here for consistency
+  donor_name: string;
+  status: 'pending' | 'approved' | 'rejected';
   reason: string | null;
   created_at: string;
   first_name: string;
   nick_name: string;
   last_name: string;
-  pmm: string; // The Project Manager responsible for this donor
+  pmm: string;
   organization_name: string;
   city: string;
   total_donations: number;

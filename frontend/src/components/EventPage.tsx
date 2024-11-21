@@ -144,6 +144,14 @@ const EventPage: React.FC = () => {
             New Event
           </button>
         )}
+                {sessionStorage.getItem("isPMM") !== "true" && (
+          <button
+            onClick={handleCreateEvent}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg mb-6 transition duration-300 ease-in-out"
+          >
+            New Event
+          </button>
+        )}
         {sessionStorage.getItem("isPMM") === "true" && (
           <button
             onClick={handleMyTasksClick}

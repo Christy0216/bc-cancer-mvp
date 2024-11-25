@@ -73,7 +73,8 @@ const EventPage: React.FC = () => {
           };
         });
 
-        setEvents(eventsWithStatus);
+      const sortedEventsWithStatus = eventsWithStatus.sort((a, b) => a.name.localeCompare(b.name));
+      setEvents(sortedEventsWithStatus);
       } catch (error) {
         console.error("Error fetching events or tasks:", error);
       }

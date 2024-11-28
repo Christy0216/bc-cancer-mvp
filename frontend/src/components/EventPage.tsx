@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +29,6 @@ ChartJS.register(centerTextPlugin);
 type Event = {
   event_id: number;
   name: string;
-  date: string; // or Date if you are using Date objects
 };
 
 type Task = {
@@ -74,10 +74,7 @@ const EventPage: React.FC = () => {
           };
         });
 
-        // Sort the events by date
-        const sortedEventsWithStatus = eventsWithStatus.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-        setEvents(sortedEventsWithStatus);
+        setEvents(eventsWithStatus);
       } catch (error) {
         console.error("Error fetching events or tasks:", error);
       }
@@ -85,6 +82,22 @@ const EventPage: React.FC = () => {
 
     fetchEventsAndTasks();
   }, []);
+
+  const handleCreateEvent = () => {
+    navigate("/create-event");
+  };
+
+  const handleMyTasksClick = () => {
+    console.log('username:', sessionStorage.getItem('userName'));
+    
+    const isPMM = sessionStorage.getItem("isPMM") === "true";
+    if (isPMM) {
+      const pmmName = sessionStorage.getItem("pmmName");
+      navigate(`/pmm/${pmmName}`);
+    } else {
+      alert("You do not have permission to access this page. Only PMMs can view tasks.");
+    }
+  };
 
   const handleEventClick = (eventId: number) => {
     navigate(`/event/${eventId}`);
@@ -119,8 +132,46 @@ const EventPage: React.FC = () => {
   );
 
   return (
-    <div>
-      {/* Render your events and charts here */}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 p-8">
+      <div className="w-full max-w-3xl bg-white rounded-lg shadow-lg p-8">
+        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+          Events
+        </h1>
+        {sessionStorage.getItem("isPMM") !== "true" && (
+          <button
+            onClick={handleCreateEvent}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg mb-6 transition duration-300 ease-in-out"
+          >
+            New Event
+          </button>
+        )}
+        {sessionStorage.getItem("isPMM") === "true" && (
+          <button
+            onClick={handleMyTasksClick}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg mb-6 transition duration-300 ease-in-out"
+          >
+            My Tasks
+          </button>
+        )}
+        <div className="space-y-4">
+          {events.map((event) => (
+            <div
+              key={event.event_id}
+              className="bg-gray-100 rounded-lg p-4 shadow-sm transition-transform duration-200 flex items-center justify-between"
+              onClick={() => handleEventClick(event.event_id)}
+            >
+              <p className="text-xl font-semibold text-gray-700 flex-grow">
+                {event.name}
+              </p>
+              <div className="flex space-x-6">
+                {renderChart(event.pending, "Pending", "#fbbf24")}
+                {renderChart(event.approved, "Approved", "#34d399")}
+                {renderChart(event.rejected, "Rejected", "#f87171")}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

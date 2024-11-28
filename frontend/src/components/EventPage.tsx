@@ -1,5 +1,3 @@
-
-import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Doughnut } from "react-chartjs-2";
@@ -171,7 +169,7 @@ const EventPage: React.FC = () => {
                 <p className="text-xl font-semibold text-gray-700">
                   {event.name}
                 </p>
-        <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500">
           {new Date(event.date).toLocaleDateString()} {new Date(event.date).toLocaleTimeString()}
         </p>
       </div>

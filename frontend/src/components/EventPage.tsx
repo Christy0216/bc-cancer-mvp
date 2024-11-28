@@ -78,7 +78,7 @@ const EventPage: React.FC = () => {
         // sort events based on date 
         const sortedEventsWithStatus = eventsWithStatus.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-        setEvents(eventsWithStatus);
+        setEvents(sortedEventsWithStatus);
       } catch (error) {
         console.error("Error fetching events or tasks:", error);
       }

@@ -29,6 +29,7 @@ ChartJS.register(centerTextPlugin);
 type Event = {
   event_id: number;
   name: string;
+  date: string;
 };
 
 type Task = {
@@ -42,6 +43,7 @@ type EventWithStatus = Event & {
   approved: number;
   rejected: number;
 };
+
 
 const EventPage: React.FC = () => {
   const [events, setEvents] = useState<EventWithStatus[]>([]);
@@ -73,6 +75,8 @@ const EventPage: React.FC = () => {
             rejected,
           };
         });
+        // sort events based on date 
+        const sortedEventsWithStatus = eventsWithStatus.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         setEvents(eventsWithStatus);
       } catch (error) {

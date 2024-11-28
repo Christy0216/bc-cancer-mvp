@@ -167,6 +167,14 @@ const EventPage: React.FC = () => {
               <p className="text-xl font-semibold text-gray-700 flex-grow">
                 {event.name}
               </p>
+              <div className="flex-grow">
+                <p className="text-xl font-semibold text-gray-700">
+                  {event.name}
+                </p>
+        <p className="text-sm text-gray-500">
+          {new Date(event.date).toLocaleDateString()} {new Date(event.date).toLocaleTimeString()}
+        </p>
+      </div>
               <div className="flex space-x-6">
                 {renderChart(event.pending, "Pending", "#fbbf24")}
                 {renderChart(event.approved, "Approved", "#34d399")}

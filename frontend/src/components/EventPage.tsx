@@ -92,7 +92,7 @@ const EventPage: React.FC = () => {
 
   const handleMyTasksClick = () => {
     console.log('username:', sessionStorage.getItem('userName'));
-    
+
     const isPMM = sessionStorage.getItem("isPMM") === "true";
     if (isPMM) {
       const pmmName = sessionStorage.getItem("pmmName");
@@ -163,17 +163,19 @@ const EventPage: React.FC = () => {
               className="bg-gray-100 rounded-lg p-4 shadow-sm transition-transform duration-200 flex items-center justify-between"
               onClick={() => handleEventClick(event.event_id)}
             >
-              <p className="text-xl font-semibold text-gray-700 flex-grow">
-                {event.name}
-              </p>
               <div className="flex-grow">
                 <p className="text-xl font-semibold text-gray-700">
                   {event.name}
                 </p>
-              <p className="text-sm text-gray-500">
-          {new Date(event.date).toLocaleDateString()} {new Date(event.date).toLocaleTimeString()}
-        </p>
-      </div>
+                <p></p>
+                <p className="text-sm text-gray-500">
+                    {new Date(event.date).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    })}
+                </p>
+              </div>
               <div className="flex space-x-6">
                 {renderChart(event.pending, "Pending", "#fbbf24")}
                 {renderChart(event.approved, "Approved", "#34d399")}

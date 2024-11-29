@@ -89,7 +89,8 @@ const EventDetailPage: React.FC = () => {
             };
           });
 
-          const pmmTaskSummaries = await Promise.all(pmmSummaryPromises);
+          let pmmTaskSummaries = await Promise.all(pmmSummaryPromises);
+          pmmTaskSummaries = pmmTaskSummaries.sort((a, b) => b.pendingCount - a.pendingCount);
           setPmmTaskSummaries(pmmTaskSummaries);
           console.log("PMM Task Summaries:", pmmTaskSummaries); // Debugging line to check the data
         }

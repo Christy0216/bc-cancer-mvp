@@ -73,7 +73,7 @@ const EventDetailPage: React.FC = () => {
           const pmmNames = [...new Set(tasksAndDonorsResponse.data.map((task) => task.pmm))];
           const pmmSummaryPromises = pmmNames.map(async (pmm) => {
             const response = await axios.get<TaskAndDonor[]>(`/api/tasks-of-pmm/${pmm}`);
-            const tasks = response.data;
+            const tasks = response.data.filter(task => task.event_id === parseInt(eventId!, 10));
 
             const pendingCount = tasks.filter((task) => task.status === "pending").length;
             const completedCount = tasks.filter(

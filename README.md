@@ -1,3 +1,20 @@
+# CS 5500 Fall 2024 BC Cancer Donor Management Web App 
+
+- **Team Name:** AngryOwls
+- **Team Logo:** <img src="Resources/team-logo.png" alt="Cat" height="128" width="128">
+- **Team Description:** A team of angry owls that need coffee ☕☕☕
+
+
+## Team Members
+| Image | Name | Email |
+|-------|------|-------|
+| <img src="Resources/sean-hero.png" alt="Sean Image" height="64" width="64"> | Sean Chen 陈笑来 | xiaolaiseanchen@gmail.com |
+| <img src="Resources/kai.jpg" alt="Kai" height="64" width="50"> | Kai | zong.k@northeastern.edu |
+| <img src="Resources/shirui.jpg" alt="Shirui" height="64" width="64"> | Shirui Chen | chen.shir@northeastern.edu |
+| <img src="Resources/Ames.jpeg" alt="AmesCG" height="64" width="64"> | Ames Gong | gong.cheng3@northeastern.edu  |
+| <img src="Resources/Ece Yıldız (1).jpg" alt="Ece" height="64" width="64"> | Ece Yildiz | yildiz.e@northeastern.edu |
+
+
 # Project Setup Instructions
 
 This document provides the steps necessary to get the backend and frontend of the project up and running on your local machine.
